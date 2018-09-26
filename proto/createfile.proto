@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package gofigure;
+
+message CreateFileRequest {
+  string path = 1;
+  string ownerName = 2;
+  string groupName = 3;
+  string ownerID = 4;
+  string groupID = 5;
+  string mode = 6;
+}
+
+message CreateFileReply {
+  bool success = 1;
+}
