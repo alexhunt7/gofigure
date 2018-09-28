@@ -17,16 +17,16 @@ var (
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name use to verify the hostname returned by TLS handshake")
 )
 
-func runCreateFile(client pb.GofigureClient, path string) {
-	log.Printf("runCreateFile")
-	cfrequest := &pb.CreateFileRequest{
+func runCreateDir(client pb.GofigureClient, path string) {
+	log.Printf("runCreateDir")
+	cfrequest := &pb.CreateDirRequest{
 		Path: path,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	_, err := client.CreateFile(ctx, cfrequest)
+	_, err := client.CreateDir(ctx, cfrequest)
 	if err != nil {
-		log.Fatalf("failed to CreateFile")
+		log.Fatalf("failed to CreateDir")
 	}
 }
 
@@ -52,5 +52,5 @@ func main() {
 	defer conn.Close()
 	client := pb.NewGofigureClient(conn)
 
-	runCreateFile(client, "asdf")
+	runCreateDir(client, "asdf")
 }

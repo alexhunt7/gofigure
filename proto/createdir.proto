@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package gofigure;
 
-message CreateFileRequest {
+message CreateDirRequest {
   string path = 1;
   string ownerName = 2;
   string groupName = 3;
@@ -11,6 +11,6 @@ message CreateFileRequest {
   string mode = 6;
 }
 
-message CreateFileReply {
+message CreateDirReply {
   bool success = 1;
 }

@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-import "createfile.proto";
+import "createdir.proto";
 
 package gofigure;
 
 service Gofigure {
-  rpc CreateFile (CreateFileRequest) returns (CreateFileReply) {}
+  rpc CreateDir (CreateDirRequest) returns (CreateDirReply) {}
 }
