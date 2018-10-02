@@ -2,6 +2,7 @@ package main
 
 import (
 	pb "alex/gofigure/proto"
+	"errors"
 	"golang.org/x/net/context"
 	"os"
 	"os/user"
@@ -29,7 +30,9 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 
 	// enforce full path
 	if !filepath.IsAbs(props.Path) {
-		return &pb.Result{Success: false, Msg: "Path is not an absolute path."}, err
+		//return &pb.Result{Success: false, Msg: "Path is not an absolute path."}, nil
+		return nil, errors.New("Must be an absolute path.")
+		//return &pb.Result{Success: false, Msg: "Path is not an absolute path."}, errors.New("Must be an absolute path.")
 	}
 
 	// Create the directory, ignoring errors if it already exists

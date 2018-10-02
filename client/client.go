@@ -19,7 +19,7 @@ var (
 
 func runCreateDir(client pb.GofigureClient, path string) {
 	log.Printf("runCreateDir")
-	cfrequest := &pb.FileRequest{
+	request := &pb.FileRequest{
 		Properties: &pb.FileProperties{
 			Path:  path,
 			Owner: "alex",
@@ -27,11 +27,17 @@ func runCreateDir(client pb.GofigureClient, path string) {
 			Mode:  "666",
 		},
 	}
+	log.Printf("Instantiated request")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	_, err := client.GofigureDirectory(ctx, cfrequest)
+	log.Printf("Created context")
+	//response, err := client.GofigureDirectory(ctx, request)
+	_, err := client.GofigureDirectory(ctx, request)
+	log.Printf("ran client.GofigureDirectory")
+	//log.Printf(response.Msg)
 	if err != nil {
-		log.Fatalf("failed to CreateDir")
+		log.Printf("failed to create dir")
+		log.Fatal(err)
 	}
 }
 
@@ -57,5 +63,5 @@ func main() {
 	defer conn.Close()
 	client := pb.NewGofigureClient(conn)
 
-	runCreateDir(client, "asdf")
+	runCreateDir(client, "/home/alex/git/golang/src/alex/gofigure/asdf")
 }
