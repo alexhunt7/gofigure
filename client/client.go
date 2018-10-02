@@ -19,12 +19,17 @@ var (
 
 func runCreateDir(client pb.GofigureClient, path string) {
 	log.Printf("runCreateDir")
-	cfrequest := &pb.CreateDirRequest{
-		Path: path,
+	cfrequest := &pb.FileRequest{
+		Properties: &pb.FileProperties{
+			Path:  path,
+			Owner: "alex",
+			Group: "alex",
+			Mode:  "666",
+		},
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	_, err := client.CreateDir(ctx, cfrequest)
+	_, err := client.GofigureDirectory(ctx, cfrequest)
 	if err != nil {
 		log.Fatalf("failed to CreateDir")
 	}
