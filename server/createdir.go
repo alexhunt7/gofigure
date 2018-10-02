@@ -2,75 +2,77 @@ package main
 
 import (
 	pb "alex/gofigure/proto"
-	"errz"
 	"golang.org/x/net/context"
 	"os"
+	"os/user"
+	"path/filepath"
 	"strconv"
 )
 
 // TODO add tests for invalid modes
 func parseFileMode(s string) (os.FileMode, error) {
-	mode, err := strconv.ParseInt("0" + s)
+	mode, err := strconv.ParseUint(s, 8, 16)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	return os.FileMode(mode), nil
 }
 
-func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequest) (result *pb.Result, err error) {
-	defer Recover(&err)
-	props := req.properties
+func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequest) (*pb.Result, error) {
+	props := req.Properties
 
 	// Get a FileMode object
-	mode, err := parseFileMode(props.mode)
+	mode, err := parseFileMode(props.Mode)
 	if err != nil {
-		return &pb.Result{Success: false, Msg: "failed to parse mode: " + err}
+		return &pb.Result{Success: false, Msg: "Failed to parse mode."}, err
 	}
 
 	// enforce full path
-	if !path.filepath.IsAbs(props.path) {
-		return &pb.Result{Success: false, Msg: "Path must be an absolute path."}
+	if !filepath.IsAbs(props.Path) {
+		return &pb.Result{Success: false, Msg: "Path is not an absolute path."}, err
 	}
 
 	// Create the directory, ignoring errors if it already exists
-	err := os.Mkdir(props.path, mode)
+	err = os.Mkdir(props.Path, mode)
 	if (err != nil) && !os.IsExist(err) {
-		return &pb.Result{Success: false, Msg: "Failed to create directory: " + err}
+		return &pb.Result{Success: false, Msg: "Failed to create directory."}, err
 	}
 
 	// Get user and group from OS
-	user, err := os.user.LookupUser(props.user)
+	owner, err := user.Lookup(props.Owner)
 	if err != nil {
-		user, err := os.user.LookupUserId(props.user)
+		owner, err = user.LookupId(props.Owner)
 		if err != nil {
-			return &pb.Result{Success: false, Msg: "User does not exist: " + err}
+			return &pb.Result{Success: false, Msg: "Failed to find user."}, err
 		}
 	}
-	group, err := os.user.LookupGroup(props.group)
+	uid, err := strconv.Atoi(owner.Uid)
 	if err != nil {
-		user, err := os.user.LookupGroupId(props.group)
+		return &pb.Result{Success: false, Msg: "Failed to parse uid."}, err
+	}
+	group, err := user.LookupGroup(props.Group)
+	if err != nil {
+		group, err = user.LookupGroupId(props.Group)
 		if err != nil {
-			return &pb.Result{Success: false, Msg: "Group does not exist: " + err}
+			return &pb.Result{Success: false, Msg: "Failed to find group."}, err
 		}
+	}
+	gid, err := strconv.Atoi(group.Gid)
+	if err != nil {
+		return &pb.Result{Success: false, Msg: "Failed to parse gid for."}, err
 	}
 
 	// chown
-	err := os.Lchown(props.path, user.Uid, group.Gid)
+	err = os.Lchown(props.Path, uid, gid)
 	if err != nil {
-		return &pb.Result{Success: false, Msg: "Failed to chown directory: " + err}
+		return &pb.Result{Success: false, Msg: "Failed to chown directory."}, err
 	}
 
 	// chmod
-	err := os.Lchmod(props.path, mode)
+	err = os.Chmod(props.Path, mode)
 	if err != nil {
-		return &pb.Result{Success: false, Msg: "Failed to chmod directory: " + err}
+		return &pb.Result{Success: false, Msg: "Failed to chmod directory."}, err
 	}
-
-	//os.OpenFile(props.path, os.O_RDONLY|os.O_CREATE)
-	//if stat, err := os.Stat(props.path); os.IsNotExist(err) {
-
-	//}
-	//todo defer
 
 	// how to hand enum
 	//switch x := m.Avatar.(type) {
@@ -85,5 +87,5 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 	//default:
 	//	return fmt.Errorf("Profile.Avatar has unexpected type %T", x)
 	//}
-	return &pb.CreateDirReply{Success: true}, err
+	return &pb.Result{Success: true}, nil
 }

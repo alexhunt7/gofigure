@@ -19,16 +19,10 @@ message FileRequest {
 
 message FileProperties {
   string path = 1;
-  oneof owner {
-    string ownerName = 2;
-    int32 ownerID = 3;
-  }
-  oneof group {
-    string groupName = 4;
-    int32 groupID = 5;
-  }
+  string owner = 2;
+  string group = 3;
   // Everyone gets octal wrong, so only accept strings
-  string mode = 6;
+  string mode = 4;
 }
 
 message Result {

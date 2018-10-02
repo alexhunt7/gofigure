@@ -6,8 +6,8 @@ package gofigure;
 
 service Gofigure {
   rpc GofigureDirectory (FileRequest) returns (Result) {}
-  rpc GofigureFile (FileRequest) returns (Result) {}
-  rpc GofigureSymlink (FileRequest) returns (Result) {}
-  rpc GofigureHardlink (FileRequest) returns (Result) {}
-  rpc GofigureDelete (FileRequest) returns (Result) {}
+  //rpc GofigureFile (FileRequest) returns (Result) {}
+  //rpc GofigureSymlink (FileRequest) returns (Result) {}
+  //rpc GofigureHardlink (FileRequest) returns (Result) {}
+  //rpc GofigureDelete (FileRequest) returns (Result) {}
 }
