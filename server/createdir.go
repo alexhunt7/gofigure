@@ -19,18 +19,22 @@ func parseFileMode(s string) (os.FileMode, error) {
 	return os.FileMode(mode), nil
 }
 
-func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequest) (*pb.Result, error) {
+func parseFileRequest(req *pb.FileRequest) (string, os.FileMode, int, int, error) {
 	props := req.Properties
+	path := props.Path
+	mode := os.FileMode(0)
+	uid := 0
+	gid := 0
 
 	// Get a FileMode object
 	mode, err := parseFileMode(props.Mode)
 	if err != nil {
-		return nil, err
+		return path, mode, uid, gid, err
 	}
 
 	// enforce full path
-	if !filepath.IsAbs(props.Path) {
-		return nil, errors.New("Must be an absolute path.")
+	if !filepath.IsAbs(path) {
+		return path, mode, uid, gid, errors.New("Must be an absolute path.")
 	}
 
 	// Get user ID
@@ -38,12 +42,12 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 	if err != nil {
 		owner, err = user.LookupId(props.Owner)
 		if err != nil {
-			return nil, err
+			return path, mode, uid, gid, err
 		}
 	}
-	uid, err := strconv.Atoi(owner.Uid)
+	uid, err = strconv.Atoi(owner.Uid)
 	if err != nil {
-		return nil, err
+		return path, mode, uid, gid, err
 	}
 
 	// Get group ID
@@ -51,29 +55,38 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 	if err != nil {
 		group, err = user.LookupGroupId(props.Group)
 		if err != nil {
-			return nil, err
+			return path, mode, uid, gid, err
 		}
 	}
-	gid, err := strconv.Atoi(group.Gid)
+	gid, err = strconv.Atoi(group.Gid)
+	if err != nil {
+		return path, mode, uid, gid, err
+	}
+
+	return path, mode, uid, gid, nil
+}
+
+func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequest) (*pb.Result, error) {
+	path, mode, uid, gid, err := parseFileRequest(req)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create the directory, ignoring errors if it already exists
-	err = os.Mkdir(props.Path, mode)
+	err = os.Mkdir(path, mode)
 	if (err != nil) && !os.IsExist(err) {
 		return nil, err
 	}
 
 	// chown
-	err = os.Lchown(props.Path, uid, gid)
+	err = os.Lchown(path, uid, gid)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO find Lchmod?
 	// chmod
-	err = os.Chmod(props.Path, mode)
+	err = os.Chmod(path, mode)
 	if err != nil {
 		return nil, err
 	}
