@@ -30,18 +30,10 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 
 	// enforce full path
 	if !filepath.IsAbs(props.Path) {
-		//return &pb.Result{Success: false, Msg: "Path is not an absolute path."}, nil
 		return nil, errors.New("Must be an absolute path.")
-		//return &pb.Result{Success: false, Msg: "Path is not an absolute path."}, errors.New("Must be an absolute path.")
 	}
 
-	// Create the directory, ignoring errors if it already exists
-	err = os.Mkdir(props.Path, mode)
-	if (err != nil) && !os.IsExist(err) {
-		return nil, err
-	}
-
-	// Get user and group from OS
+	// Get user ID
 	owner, err := user.Lookup(props.Owner)
 	if err != nil {
 		owner, err = user.LookupId(props.Owner)
@@ -53,6 +45,8 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 	if err != nil {
 		return nil, err
 	}
+
+	// Get group ID
 	group, err := user.LookupGroup(props.Group)
 	if err != nil {
 		group, err = user.LookupGroupId(props.Group)
@@ -65,12 +59,19 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 		return nil, err
 	}
 
+	// Create the directory, ignoring errors if it already exists
+	err = os.Mkdir(props.Path, mode)
+	if (err != nil) && !os.IsExist(err) {
+		return nil, err
+	}
+
 	// chown
 	err = os.Lchown(props.Path, uid, gid)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO find Lchmod?
 	// chmod
 	err = os.Chmod(props.Path, mode)
 	if err != nil {
