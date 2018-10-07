@@ -25,7 +25,7 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 	// Get a FileMode object
 	mode, err := parseFileMode(props.Mode)
 	if err != nil {
-		return &pb.Result{Success: false, Msg: "Failed to parse mode."}, err
+		return nil, err
 	}
 
 	// enforce full path
@@ -38,7 +38,7 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 	// Create the directory, ignoring errors if it already exists
 	err = os.Mkdir(props.Path, mode)
 	if (err != nil) && !os.IsExist(err) {
-		return &pb.Result{Success: false, Msg: "Failed to create directory."}, err
+		return nil, err
 	}
 
 	// Get user and group from OS
@@ -46,35 +46,35 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 	if err != nil {
 		owner, err = user.LookupId(props.Owner)
 		if err != nil {
-			return &pb.Result{Success: false, Msg: "Failed to find user."}, err
+			return nil, err
 		}
 	}
 	uid, err := strconv.Atoi(owner.Uid)
 	if err != nil {
-		return &pb.Result{Success: false, Msg: "Failed to parse uid."}, err
+		return nil, err
 	}
 	group, err := user.LookupGroup(props.Group)
 	if err != nil {
 		group, err = user.LookupGroupId(props.Group)
 		if err != nil {
-			return &pb.Result{Success: false, Msg: "Failed to find group."}, err
+			return nil, err
 		}
 	}
 	gid, err := strconv.Atoi(group.Gid)
 	if err != nil {
-		return &pb.Result{Success: false, Msg: "Failed to parse gid for."}, err
+		return nil, err
 	}
 
 	// chown
 	err = os.Lchown(props.Path, uid, gid)
 	if err != nil {
-		return &pb.Result{Success: false, Msg: "Failed to chown directory."}, err
+		return nil, err
 	}
 
 	// chmod
 	err = os.Chmod(props.Path, mode)
 	if err != nil {
-		return &pb.Result{Success: false, Msg: "Failed to chmod directory."}, err
+		return nil, err
 	}
 
 	// how to hand enum
