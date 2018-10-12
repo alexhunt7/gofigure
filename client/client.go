@@ -17,7 +17,7 @@ var (
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name use to verify the hostname returned by TLS handshake")
 )
 
-func runCreateDir(client pb.GofigureClient, path string) {
+func runCreateFile(client pb.GofigureClient, path string) {
 	log.Printf("runCreateDir")
 	request := &pb.FileRequest{
 		Properties: &pb.FileProperties{
@@ -25,6 +25,31 @@ func runCreateDir(client pb.GofigureClient, path string) {
 			Owner: "alex",
 			Group: "alex",
 			Mode:  "666",
+		},
+		Content: []byte("this is a test\n"),
+	}
+	log.Printf("Instantiated request")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	log.Printf("Created context")
+	//response, err := client.GofigureDirectory(ctx, request)
+	_, err := client.GofigureFile(ctx, request)
+	log.Printf("ran client.GofigureFile")
+	//log.Printf(response.Msg)
+	if err != nil {
+		log.Printf("failed to create file")
+		log.Fatal(err)
+	}
+}
+
+func runCreateDir(client pb.GofigureClient, path string) {
+	log.Printf("runCreateDir")
+	request := &pb.FileRequest{
+		Properties: &pb.FileProperties{
+			Path:  path,
+			Owner: "alex",
+			Group: "alex",
+			Mode:  "700",
 		},
 	}
 	log.Printf("Instantiated request")
@@ -64,4 +89,5 @@ func main() {
 	client := pb.NewGofigureClient(conn)
 
 	runCreateDir(client, "/home/alex/git/golang/src/alex/gofigure/asdf")
+	runCreateFile(client, "/home/alex/git/golang/src/alex/gofigure/asdf/qwer")
 }

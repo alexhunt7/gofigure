@@ -13,8 +13,9 @@ message FileRequest {
   //}
   //State state = 2;
   bool recursive = 2;
-  bool touch = 8;
-  string linkTarget = 9;
+  bool touch = 3;
+  string linkTarget = 4;
+  bytes content = 5;
 }
 
 message FileProperties {
