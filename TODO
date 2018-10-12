@@ -1,0 +1,28 @@
+Definite:
+* Stat
+  returns:
+    exists: (bool)
+    FileInfo:
+      - name
+      - size (bytes)
+      - mode
+      - modification time
+      - isDir
+
+* State enum for file/directory (don't assume present)
+
+* command and shell
+  - stdin?
+  - args?
+  returns:
+    - rc
+    - stdout
+    - stderr
+
+
+
+
+
+Possible:
+
+* web requests?
