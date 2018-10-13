@@ -1,12 +1,15 @@
 syntax = "proto3";
 
 import "file.proto";
+import "exec.proto";
 
 package gofigure;
 
 service Gofigure {
   rpc GofigureDirectory (FileRequest) returns (Result) {}
   rpc GofigureFile (FileRequest) returns (Result) {}
+  rpc GofigureStat (StatRequest) returns (StatResult) {}
+  rpc GofigureExec (ExecRequest) returns (ExecResult) {}
   //rpc GofigureSymlink (FileRequest) returns (Result) {}
   //rpc GofigureHardlink (FileRequest) returns (Result) {}
   //rpc GofigureDelete (FileRequest) returns (Result) {}

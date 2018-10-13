@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package gofigure;
+
+message ExecRequest {
+  string executable = 1;
+  repeated string args = 2;
+  bytes stdin = 3;
+  repeated string env = 4;
+}
+
+message ExecResult {
+  int32 returnCode = 1;
+  string stdout = 2;
+  string stderr = 3;
+}

@@ -2,6 +2,24 @@ syntax = "proto3";
 
 package gofigure;
 
+message StatRequest {
+  string path = 1;
+}
+
+message StatResult {
+  int64 size = 1;
+  string mode = 2;
+  bool isDir = 3;
+  bool exists = 4;
+
+  uint32 uid = 5;
+  uint32 gid = 6;
+  string owner = 7;
+  string group = 8;
+
+  // modification time?
+}
+
 message FileRequest {
   FileProperties properties = 1;
   //enum State {

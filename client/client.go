@@ -17,6 +17,46 @@ var (
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name use to verify the hostname returned by TLS handshake")
 )
 
+func runExec(client pb.GofigureClient, executable string) {
+	log.Printf("runExec")
+	request := &pb.ExecRequest{
+		Executable: executable,
+	}
+	log.Printf("Instantiated request")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	log.Printf("Created context")
+	response, err := client.GofigureExec(ctx, request)
+	log.Printf("ran client.GofigureExec")
+	if err != nil {
+		log.Printf("failed to exec")
+		log.Fatal(err)
+	}
+	log.Printf("stdout: %s", response.Stdout)
+	log.Printf("stderr: %s", response.Stderr)
+}
+
+func runStat(client pb.GofigureClient, path string) {
+	log.Printf("runStat")
+	request := &pb.StatRequest{
+		Path: path,
+	}
+	log.Printf("Instantiated request")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	log.Printf("Created context")
+	response, err := client.GofigureStat(ctx, request)
+	log.Printf("ran client.GofigureStat")
+	//log.Printf(response.Msg)
+	if err != nil {
+		log.Printf("failed to stat file")
+		log.Fatal(err)
+	}
+	log.Printf("owner: %s", response.Owner)
+	log.Printf("group: %s", response.Group)
+	log.Printf("mode: %s", response.Mode)
+}
+
 func runCreateFile(client pb.GofigureClient, path string) {
 	log.Printf("runCreateDir")
 	request := &pb.FileRequest{
@@ -90,4 +130,6 @@ func main() {
 
 	runCreateDir(client, "/home/alex/git/golang/src/alex/gofigure/asdf")
 	runCreateFile(client, "/home/alex/git/golang/src/alex/gofigure/asdf/qwer")
+	runStat(client, "/home/alex/git/golang/src/alex/gofigure/asdf/qwer")
+	runExec(client, "ls")
 }

@@ -8,10 +8,12 @@ import (
 	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
+	"syscall"
 )
 
 // TODO add tests for invalid modes
@@ -105,6 +107,44 @@ func safeWrite(path string, content []byte, mode os.FileMode) error {
 	}
 
 	return nil
+}
+
+func (s *GofigureServer) GofigureStat(ctx context.Context, req *pb.StatRequest) (*pb.StatResult, error) {
+	fstat, err := os.Stat(req.Path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &pb.StatResult{Exists: false}, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	statt := fstat.Sys().(*syscall.Stat_t)
+	uid := statt.Uid
+	gid := statt.Gid
+
+	result := pb.StatResult{
+		Size:   fstat.Size(),
+		Mode:   strconv.FormatUint(uint64(fstat.Mode().Perm()), 8),
+		IsDir:  fstat.IsDir(),
+		Exists: true,
+		Uid:    uid,
+		Gid:    gid,
+	}
+
+	log.Printf("uid: %i", uid)
+	owner, err := user.LookupId(strconv.FormatUint(uint64(uid), 10))
+	if err == nil {
+		result.Owner = owner.Username
+	}
+	log.Printf("owner: %s", owner)
+
+	group, err := user.LookupGroupId(strconv.FormatUint(uint64(gid), 10))
+	if err == nil {
+		result.Group = group.Name
+	}
+
+	return &result, nil
 }
 
 func (s *GofigureServer) GofigureFile(ctx context.Context, req *pb.FileRequest) (*pb.Result, error) {
