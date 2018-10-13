@@ -10,9 +10,10 @@ import (
 
 func (s *GofigureServer) GofigureExec(ctx context.Context, req *pb.ExecRequest) (*pb.ExecResult, error) {
 	// https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
-	// TODO env?
-	// TODO stdin?
-	cmd := exec.CommandContext(ctx, req.Executable)
+	// TODO env
+	// TODO stdin
+	// TODO cwd
+	cmd := exec.CommandContext(ctx, req.Executable, req.Args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

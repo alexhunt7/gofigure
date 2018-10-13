@@ -17,10 +17,11 @@ var (
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name use to verify the hostname returned by TLS handshake")
 )
 
-func runExec(client pb.GofigureClient, executable string) {
+func runExec(client pb.GofigureClient, executable string, args ...string) {
 	log.Printf("runExec")
 	request := &pb.ExecRequest{
 		Executable: executable,
+		Args:       args,
 	}
 	log.Printf("Instantiated request")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -131,5 +132,5 @@ func main() {
 	runCreateDir(client, "/home/alex/git/golang/src/alex/gofigure/asdf")
 	runCreateFile(client, "/home/alex/git/golang/src/alex/gofigure/asdf/qwer")
 	runStat(client, "/home/alex/git/golang/src/alex/gofigure/asdf/qwer")
-	runExec(client, "ls")
+	runExec(client, "echo", "hello", "world")
 }
