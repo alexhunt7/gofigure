@@ -27,6 +27,10 @@ func TestGofigureExec(t *testing.T) {
 			expectedStdout:     "hello world\n",
 			expectedStderr:     "",
 		},
+		{
+			executable: "asdflkjas",
+			shouldErr:  true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -41,6 +45,7 @@ func TestGofigureExec(t *testing.T) {
 			if err == nil {
 				t.Errorf("TestGofigureExec did not error as expected")
 			}
+			continue
 		} else {
 			if err != nil {
 				t.Errorf("TestGofigureExec got unexpected error: %v", err)
