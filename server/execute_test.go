@@ -28,6 +28,12 @@ func TestGofigureExec(t *testing.T) {
 			expectedStderr:     "",
 		},
 		{
+			executable:         "echo",
+			expectedReturnCode: 0,
+			expectedStdout:     "\n",
+			expectedStderr:     "",
+		},
+		{
 			executable: "asdflkjas",
 			shouldErr:  true,
 		},
