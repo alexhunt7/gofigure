@@ -147,7 +147,7 @@ func (s *GofigureServer) GofigureStat(ctx context.Context, req *pb.StatRequest) 
 		Gid:    gid,
 	}
 
-	log.Printf("uid: %i", uid)
+	log.Printf("uid: %d", uid)
 	owner, err := user.LookupId(strconv.FormatUint(uint64(uid), 10))
 	if err == nil {
 		result.Owner = owner.Username
