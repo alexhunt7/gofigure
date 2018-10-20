@@ -21,6 +21,7 @@ func TestGofigureExec(t *testing.T) {
 		expectedStderr     string
 	}{
 		{
+			// Simple case
 			executable:         "echo",
 			args:               []string{"hello", "world"},
 			expectedReturnCode: 0,
@@ -28,12 +29,22 @@ func TestGofigureExec(t *testing.T) {
 			expectedStderr:     "",
 		},
 		{
+			// test it works with no args
 			executable:         "echo",
 			expectedReturnCode: 0,
 			expectedStdout:     "\n",
 			expectedStderr:     "",
 		},
 		{
+			// test it gives stderr, passes return code, and can handle shells
+			executable:         "sh",
+			args:               []string{"-c", "echo hello world && echo goodbye world >&2 && exit 37"},
+			expectedReturnCode: 37,
+			expectedStdout:     "hello world\n",
+			expectedStderr:     "goodbye world\n",
+		},
+		{
+			// test it throws an err with a non-existant executable
 			executable: "asdflkjas",
 			shouldErr:  true,
 		},
