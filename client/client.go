@@ -1,8 +1,8 @@
 package main
 
 import (
-	pb "alex/gofigure/proto"
 	"flag"
+	pb "github.com/alexhunt7/gofigure/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

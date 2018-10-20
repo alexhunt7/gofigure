@@ -1,4 +1,4 @@
-module alex/gofigure
+module github.com/alexhunt7/gofigure
 
 require (
 	github.com/golang/protobuf v1.2.0

@@ -1,8 +1,8 @@
 package main
 
 import (
-	pb "alex/gofigure/proto"
 	"bytes"
+	pb "github.com/alexhunt7/gofigure/proto"
 	"golang.org/x/net/context"
 	"os/exec"
 	"syscall"

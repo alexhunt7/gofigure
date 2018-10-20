@@ -1,10 +1,10 @@
 package main
 
 import (
-	pb "alex/gofigure/proto"
 	"bytes"
 	"crypto/sha256"
 	"errors"
+	pb "github.com/alexhunt7/gofigure/proto"
 	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"

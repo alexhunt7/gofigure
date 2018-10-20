@@ -1,9 +1,9 @@
 package main
 
 import (
-	pb "alex/gofigure/proto"
 	"flag"
 	"fmt"
+	pb "github.com/alexhunt7/gofigure/proto"
 	"log"
 	"net"
 
