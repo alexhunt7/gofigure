@@ -1,7 +1,7 @@
 package main
 
 import (
-	//pb "github.com/alexhunt7/gofigure/proto"
+	pb "github.com/alexhunt7/gofigure/proto"
 	//"golang.org/x/net/context"
 	"os"
 	"testing"
@@ -32,6 +32,7 @@ func TestParseFileMode(t *testing.T) {
 func TestParseFileModeError(t *testing.T) {
 	tests := []string{
 		"asdf",
+		"a",
 		"",
 		"!",
 		"10.4",
@@ -42,6 +43,62 @@ func TestParseFileModeError(t *testing.T) {
 		_, err := parseFileMode(tt)
 		if err == nil {
 			t.Errorf("TestParseFileModeError did not error as expected")
+		}
+	}
+}
+
+func TestOwnMod(t *testing.T) {
+	// TODO
+}
+
+func TestParseFileProperties(t *testing.T) {
+	tests := []struct {
+		fileRequest  *pb.FileRequest
+		expectedPath string
+		expectedMode os.FileMode
+		expectedUid  int
+		expectedGid  int
+		shouldErr    bool
+	}{
+		{
+			// TODO find a way to test this stuff cross environment. Mock? Docker?
+			fileRequest: &pb.FileRequest{
+				Properties: &pb.FileProperties{
+					Path:  "/home/alex/git",
+					Owner: "alex",
+					Group: "alex",
+					Mode:  "700",
+				},
+			},
+			expectedPath: "/home/alex/git",
+			expectedUid:  1000,
+			expectedGid:  1000,
+			expectedMode: os.FileMode(uint(448)),
+		},
+	}
+	for _, tt := range tests {
+		path, mode, uid, gid, err := parseFileProperties(tt.fileRequest)
+		if tt.shouldErr {
+			if err == nil {
+				t.Errorf("TestParseFileProperties did not error as expected")
+			}
+			continue
+		} else {
+			if err != nil {
+				t.Errorf("TestParseFileProperties got unexpected error: %v", err)
+			}
+		}
+		if path != tt.expectedPath {
+			t.Errorf("TestParseFileProperties path, %v != %v", path, tt.expectedPath)
+		}
+		if mode != tt.expectedMode {
+			t.Errorf("TestParseFileProperties mode, %v != %v", mode, tt.expectedMode)
+		}
+		if uid != tt.expectedUid {
+			t.Errorf("TestParseFileProperties uid, %v != %v", uid, tt.expectedUid)
+		}
+		if gid != tt.expectedGid {
+			t.Errorf("TestParseFileProperties gid, %v != %v", gid, tt.expectedGid)
 		}
 	}
 }
