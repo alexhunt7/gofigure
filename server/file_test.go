@@ -60,8 +60,9 @@ func TestParseFileProperties(t *testing.T) {
 		expectedGid  int
 		shouldErr    bool
 	}{
+		// TODO find a way to test this stuff cross environment. Mock? Docker?
 		{
-			// TODO find a way to test this stuff cross environment. Mock? Docker?
+			// Simplest case
 			fileRequest: &pb.FileRequest{
 				Properties: &pb.FileProperties{
 					Path:  "/home/alex/git",
@@ -74,6 +75,85 @@ func TestParseFileProperties(t *testing.T) {
 			expectedUid:  1000,
 			expectedGid:  1000,
 			expectedMode: os.FileMode(uint(448)),
+		},
+		{
+			// Check that it handles uid/gid numbers
+			fileRequest: &pb.FileRequest{
+				Properties: &pb.FileProperties{
+					Path:  "/home/alex",
+					Owner: "1000",
+					Group: "1000",
+					Mode:  "700",
+				},
+			},
+			expectedPath: "/home/alex",
+			expectedUid:  1000,
+			expectedGid:  1000,
+			expectedMode: os.FileMode(uint(448)),
+		},
+		// TODO make it trim relative paths
+		//{
+		//	// Check that it handles full relative paths
+		//	fileRequest: &pb.FileRequest{
+		//		Properties: &pb.FileProperties{
+		//			Path:  "/home/alex/../alex/git",
+		//			Owner: "alex",
+		//			Group: "alex",
+		//			Mode:  "700",
+		//		},
+		//	},
+		//	expectedPath: "/home/alex/git",
+		//	expectedUid:  1000,
+		//	expectedGid:  1000,
+		//	expectedMode: os.FileMode(uint(448)),
+		//},
+		{
+			// Check that it errors on ~/
+			fileRequest: &pb.FileRequest{
+				Properties: &pb.FileProperties{
+					Path:  "~/git",
+					Owner: "alex",
+					Group: "alex",
+					Mode:  "700",
+				},
+			},
+			shouldErr: true,
+		},
+		{
+			// Check that it errors on relative paths
+			fileRequest: &pb.FileRequest{
+				Properties: &pb.FileProperties{
+					Path:  "git",
+					Owner: "alex",
+					Group: "alex",
+					Mode:  "700",
+				},
+			},
+			shouldErr: true,
+		},
+		{
+			// Check that it errors on non-existant uid
+			fileRequest: &pb.FileRequest{
+				Properties: &pb.FileProperties{
+					Path:  "/home/alex",
+					Owner: "32487",
+					Group: "1000",
+					Mode:  "700",
+				},
+			},
+			shouldErr: true,
+		},
+		{
+			// Check that it errors on non-existant gid
+			fileRequest: &pb.FileRequest{
+				Properties: &pb.FileProperties{
+					Path:  "/home/alex",
+					Owner: "1000",
+					Group: "32487",
+					Mode:  "700",
+				},
+			},
+			shouldErr: true,
 		},
 	}
 	for _, tt := range tests {
