@@ -1,11 +1,11 @@
 CORES ?= $(shell nproc)
 
-.PHONY: all _all clean proto
+.PHONY: all _all clean proto test
 
 all:
 	@$(MAKE) _all --no-print-directory -j$(CORES)
 
-_all: clean proto gofigure-client gofigure-server
+_all: clean proto gofigure-client gofigure-server test
 
 clean:
 	rm -f proto/*.go gofigure-client gofigure-server
@@ -18,3 +18,7 @@ gofigure-server: proto
 
 gofigure-client: proto
 	go build -o gofigure-client client/*.go
+
+test: proto
+	go test ./... -coverprofile=coverage.out
+	go tool cover -html=coverage.out
