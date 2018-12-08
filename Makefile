@@ -8,7 +8,7 @@ all:
 _all: clean proto gofigure-client gofigure-server test
 
 clean:
-	rm -f proto/*.go gofigure-client gofigure-server
+	rm -f proto/*.go gofigure-client gofigure-server coverage.out
 
 proto:
 	protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto
