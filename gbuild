@@ -1,4 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-go build -o gofigure-server server/*.go
-go build -o gofigure-client client/*.go
