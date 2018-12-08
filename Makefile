@@ -1,6 +1,6 @@
 CORES ?= $(shell nproc)
 
-.PHONY: clean proto
+.PHONY: all _all clean proto
 
 all:
 	@$(MAKE) _all --no-print-directory -j$(CORES)
