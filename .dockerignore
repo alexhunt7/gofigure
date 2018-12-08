@@ -1,0 +1,4 @@
+.dockerignore
+gofigure-client
+gofigure-server
+proto/*.go
