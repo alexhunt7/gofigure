@@ -13,14 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package main
+package client
 
 import (
 	"flag"
 	pb "github.com/alexhunt7/gofigure/proto"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"log"
 	"time"
 )
@@ -32,7 +30,11 @@ var (
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name use to verify the hostname returned by TLS handshake")
 )
 
-func runExec(client pb.GofigureClient, executable string, args ...string) {
+type Client struct {
+	pb.GofigureClient
+}
+
+func (client Client) Exec(executable string, args ...string) {
 	log.Printf("runExec")
 	request := &pb.ExecRequest{
 		Executable: executable,
@@ -52,7 +54,7 @@ func runExec(client pb.GofigureClient, executable string, args ...string) {
 	log.Printf("stderr: %s", response.Stderr)
 }
 
-func runStat(client pb.GofigureClient, path string) {
+func (client Client) Stat(path string) {
 	log.Printf("runStat")
 	request := &pb.StatRequest{
 		Path: path,
@@ -73,7 +75,7 @@ func runStat(client pb.GofigureClient, path string) {
 	log.Printf("mode: %s", response.Mode)
 }
 
-func runCreateFile(client pb.GofigureClient, path string) {
+func (client Client) CreateFile(path string) {
 	log.Printf("runCreateDir")
 	request := &pb.FileRequest{
 		Properties: &pb.FileProperties{
@@ -98,7 +100,7 @@ func runCreateFile(client pb.GofigureClient, path string) {
 	}
 }
 
-func runCreateDir(client pb.GofigureClient, path string) {
+func (client Client) CreateDir(path string) {
 	log.Printf("runCreateDir")
 	request := &pb.FileRequest{
 		Properties: &pb.FileProperties{
@@ -120,32 +122,4 @@ func runCreateDir(client pb.GofigureClient, path string) {
 		log.Printf("failed to create dir")
 		log.Fatal(err)
 	}
-}
-
-func main() {
-	flag.Parse()
-	var opts []grpc.DialOption
-	if *tls {
-		//if *caFile == "" {
-		//	*caFile = testdata.Path("ca.pem")
-		//}
-		creds, err := credentials.NewClientTLSFromFile(*caFile, *serverHostOverride)
-		if err != nil {
-			log.Fatalf("Failed to create TLS credentials %v", err)
-		}
-		opts = append(opts, grpc.WithTransportCredentials(creds))
-	} else {
-		opts = append(opts, grpc.WithInsecure())
-	}
-	conn, err := grpc.Dial(*serverAddr, opts...)
-	if err != nil {
-		log.Fatalf("fail to dial: %v", err)
-	}
-	defer conn.Close()
-	client := pb.NewGofigureClient(conn)
-
-	runCreateDir(client, "/home/alex/git/golang/src/alex/gofigure/asdf")
-	runCreateFile(client, "/home/alex/git/golang/src/alex/gofigure/asdf/qwer")
-	runStat(client, "/home/alex/git/golang/src/alex/gofigure/asdf/qwer")
-	runExec(client, "echo", "hello", "world")
 }
