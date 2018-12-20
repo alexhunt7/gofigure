@@ -5,7 +5,7 @@ CORES ?= $(shell nproc)
 all:
 	@$(MAKE) _all --no-print-directory -j$(CORES)
 
-_all: clean proto gofigure-client gofigure-server test
+_all: clean proto gofigure test
 
 clean:
 	rm -f proto/*.go gofigure-client gofigure-server coverage.out
@@ -13,11 +13,8 @@ clean:
 proto:
 	protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto
 
-gofigure-server: proto
-	go build -o gofigure-server server/*.go
-
-gofigure-client: proto
-	go build -o gofigure-client client/*.go
+gofigure: proto
+	go build -o gofigure
 
 test: proto
 	go test ./... -coverprofile=coverage.out

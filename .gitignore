@@ -1,5 +1,4 @@
 *.pb.go
-gofigure-client
-gofigure-server
+gofigure
 asdf
 coverage.out
