@@ -13,7 +13,7 @@ COPY ./proto/ /go/src/github.com/alexhunt7/gofigure/proto/
 RUN protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto
 
 COPY ./client/ /go/src/github.com/alexhunt7/gofigure/client/
-RUN go build -o gofigure-client client/*.go
-
 COPY ./server/ /go/src/github.com/alexhunt7/gofigure/server/
-RUN go build -o gofigure-server server/*.go
+COPY ./cmd/ /go/src/github.com/alexhunt7/gofigure/cmd/
+COPY ./main.go /go/src/github.com/alexhunt7/gofigure/
+RUN go build -o gofigure
