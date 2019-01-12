@@ -7,7 +7,7 @@ all: clean proto gofigure test upx
 clean:
 	rm -f proto/*.go gofigure coverage.out
 
-proto:
+proto: clean
 	protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto
 
 gofigure: proto
@@ -21,4 +21,4 @@ bench:
 	go test -bench=. ./...
 
 upx: gofigure
-	upx gofigure
+	upx -qq gofigure
