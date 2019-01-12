@@ -23,7 +23,6 @@ import (
 	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -148,12 +147,10 @@ func (s *GofigureServer) GofigureStat(ctx context.Context, req *pb.StatRequest) 
 		Gid:    gid,
 	}
 
-	log.Printf("uid: %d", uid)
 	owner, err := user.LookupId(strconv.FormatUint(uint64(uid), 10))
 	if err == nil {
 		result.Owner = owner.Username
 	}
-	log.Printf("owner: %s", owner)
 
 	group, err := user.LookupGroupId(strconv.FormatUint(uint64(gid), 10))
 	if err == nil {
