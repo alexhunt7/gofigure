@@ -109,6 +109,7 @@ func safeWrite(path string, content []byte, mode os.FileMode) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 	defer os.Remove(f.Name())
 
 	err = ioutil.WriteFile(f.Name(), content, mode)
