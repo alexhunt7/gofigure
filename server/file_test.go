@@ -2,9 +2,11 @@ package server
 
 import (
 	pb "github.com/alexhunt7/gofigure/proto"
-	//"golang.org/x/net/context"
+	"golang.org/x/net/context"
 	"os"
+	"os/user"
 	"testing"
+	"time"
 )
 
 func TestParseFileMode(t *testing.T) {
@@ -180,5 +182,51 @@ func TestParseFileProperties(t *testing.T) {
 		if gid != tt.expectedGid {
 			t.Errorf("TestParseFileProperties gid, %v != %v", gid, tt.expectedGid)
 		}
+	}
+}
+
+func TestGofigureFile(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Errorf("Failed to get working directory: %v", err)
+	}
+	testdir := wd + "/testdata/dir"
+	os.RemoveAll(testdir)
+
+	user, err := user.Current()
+	if err != nil {
+		t.Errorf("Failed to get current user: %v", err)
+	}
+
+	gs := &GofigureServer{}
+
+	req := &pb.FileRequest{
+		Properties: &pb.FileProperties{
+			Path:  testdir,
+			Owner: user.Username,
+			Group: user.Gid,
+			Mode:  "700",
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err = gs.GofigureDirectory(ctx, req)
+	if err != nil {
+		t.Errorf("Failed to run GofigureDirectory: %v", err)
+	}
+
+	req.Content = []byte("Hello world!\n")
+	req.Properties.Path = testdir + "testfile"
+
+	_, err = gs.GofigureFile(ctx, req)
+	if err != nil {
+		t.Errorf("Failed to run GofigureFile: %v", err)
+	}
+
+	req.Properties.Mode = "600"
+	_, err = gs.GofigureFile(ctx, req)
+	if err != nil {
+		t.Errorf("Failed to run GofigureFile: %v", err)
 	}
 }
