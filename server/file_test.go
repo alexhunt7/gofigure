@@ -273,3 +273,50 @@ func TestGofigureFile(t *testing.T) {
 		t.Errorf("Mode not 700: %s", stat.Mode)
 	}
 }
+
+func BenchmarkGofigureFile(b *testing.B) {
+	gs := &GofigureServer{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	wd, err := os.Getwd()
+	if err != nil {
+		b.Errorf("Failed to get working directory: %v", err)
+	}
+	testdir := wd + "/testdata/dir"
+	err = os.RemoveAll(testdir)
+	if err != nil {
+		b.Errorf("Failed to remove testdir: %v", err)
+	}
+
+	user, err := user.Current()
+	if err != nil {
+		b.Errorf("Failed to get current user: %v", err)
+	}
+
+	req := &pb.FileRequest{
+		Properties: &pb.FileProperties{
+			Path:  testdir,
+			Owner: user.Username,
+			Group: user.Gid,
+			Mode:  "700",
+		},
+	}
+
+	_, err = gs.GofigureDirectory(ctx, req)
+	if err != nil {
+		b.Errorf("Failed to run GofigureDirectory: %v", err)
+	}
+
+	b.ResetTimer()
+	req.Content = []byte("Hello world!\n")
+	for i := 0; i < b.N; i++ {
+		//req.Properties.Path = fmt.Sprintf("%s/%d", testdir, i)
+		req.Properties.Path = testdir + "/" + strconv.Itoa(i)
+
+		_, err = gs.GofigureFile(ctx, req)
+		if err != nil {
+			b.Errorf("Failed to run GofigureFile: %v", err)
+		}
+	}
+}
