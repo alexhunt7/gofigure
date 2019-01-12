@@ -1,5 +1,3 @@
-CORES ?= $(shell nproc)
-
 .PHONY: all _all clean proto test upx
 
 all: clean proto gofigure test upx
