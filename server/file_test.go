@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/context"
 	"os"
 	"os/user"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -186,19 +187,34 @@ func TestParseFileProperties(t *testing.T) {
 }
 
 func TestGofigureFile(t *testing.T) {
+	gs := &GofigureServer{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Errorf("Failed to get working directory: %v", err)
 	}
 	testdir := wd + "/testdata/dir"
-	os.RemoveAll(testdir)
+	testfile := testdir + "/testfile"
+	err = os.RemoveAll(testdir)
+	if err != nil {
+		t.Errorf("Failed to remove testdir: %v", err)
+	}
+
+	statReq := &pb.StatRequest{Path: testfile}
+	stat, err := gs.GofigureStat(ctx, statReq)
+	if err != nil {
+		t.Errorf("Failed to run GofigureStat: %v", err)
+	}
+	if stat.Exists {
+		t.Errorf("Failed to remove testdir")
+	}
 
 	user, err := user.Current()
 	if err != nil {
 		t.Errorf("Failed to get current user: %v", err)
 	}
-
-	gs := &GofigureServer{}
 
 	req := &pb.FileRequest{
 		Properties: &pb.FileProperties{
@@ -208,8 +224,6 @@ func TestGofigureFile(t *testing.T) {
 			Mode:  "700",
 		},
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	_, err = gs.GofigureDirectory(ctx, req)
 	if err != nil {
@@ -217,16 +231,45 @@ func TestGofigureFile(t *testing.T) {
 	}
 
 	req.Content = []byte("Hello world!\n")
-	req.Properties.Path = testdir + "testfile"
+	req.Properties.Path = testfile
 
 	_, err = gs.GofigureFile(ctx, req)
 	if err != nil {
 		t.Errorf("Failed to run GofigureFile: %v", err)
 	}
 
-	req.Properties.Mode = "600"
+	stat, err = gs.GofigureStat(ctx, statReq)
+	if err != nil {
+		t.Errorf("Failed to run GofigureStat: %v", err)
+	}
+	if !stat.Exists {
+		t.Errorf("Does not exist")
+	}
+	if stat.Mode != "700" {
+		t.Errorf("Mode not 700: %s", stat.Mode)
+	}
+	uid, _ := strconv.Atoi(user.Uid)
+	if stat.Uid != uint32(uid) {
+		t.Errorf("Uid mismatch: %d != %s", stat.Uid, user.Uid)
+	}
+	gid, _ := strconv.Atoi(user.Gid)
+	if stat.Gid != uint32(gid) {
+		t.Errorf("Gid mismatch: %d != %s", stat.Gid, user.Gid)
+	}
+	if stat.Size != 13 {
+		t.Errorf("Size mismatch: %d", stat.Size)
+	}
+
+	req.Properties.Mode = "0600"
 	_, err = gs.GofigureFile(ctx, req)
 	if err != nil {
 		t.Errorf("Failed to run GofigureFile: %v", err)
+	}
+	stat, err = gs.GofigureStat(ctx, statReq)
+	if err != nil {
+		t.Errorf("Failed to run GofigureStat: %v", err)
+	}
+	if stat.Mode != "600" {
+		t.Errorf("Mode not 700: %s", stat.Mode)
 	}
 }
