@@ -1,8 +1,8 @@
 CORES ?= $(shell nproc)
 
-.PHONY: all _all clean proto test
+.PHONY: all _all clean proto test upx
 
-all: clean proto gofigure test
+all: clean proto gofigure test upx
 
 clean:
 	rm -f proto/*.go gofigure coverage.out
@@ -16,3 +16,6 @@ gofigure: proto
 test: proto
 	go test ./... -coverprofile=coverage.out
 	go tool cover -html=coverage.out
+
+upx: gofigure
+	upx gofigure
