@@ -1,4 +1,4 @@
-.PHONY: all _all clean proto test upx
+.PHONY: all clean proto test bench upx
 
 all: clean proto gofigure test upx
 
