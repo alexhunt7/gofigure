@@ -56,7 +56,7 @@ func (client Client) Exec(executable string, args ...string) {
 
 func (client Client) Stat(path string) {
 	log.Printf("runStat")
-	request := &pb.StatRequest{
+	request := &pb.FilePath{
 		Path: path,
 	}
 	log.Printf("Instantiated request")

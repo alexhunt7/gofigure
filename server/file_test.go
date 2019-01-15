@@ -202,7 +202,7 @@ func TestGofigureFile(t *testing.T) {
 		t.Errorf("Failed to remove testdir: %v", err)
 	}
 
-	statReq := &pb.StatRequest{Path: testfile}
+	statReq := &pb.FilePath{Path: testfile}
 	stat, err := gs.GofigureStat(ctx, statReq)
 	if err != nil {
 		t.Errorf("Failed to run GofigureStat: %v", err)

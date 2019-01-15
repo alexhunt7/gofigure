@@ -124,7 +124,7 @@ func safeWrite(path string, content []byte, mode os.FileMode) error {
 	return nil
 }
 
-func (s *GofigureServer) GofigureStat(ctx context.Context, req *pb.StatRequest) (*pb.StatResult, error) {
+func (s *GofigureServer) GofigureStat(ctx context.Context, req *pb.FilePath) (*pb.StatResult, error) {
 	fstat, err := os.Stat(req.Path)
 	if err != nil {
 		if os.IsNotExist(err) {
