@@ -160,7 +160,7 @@ func (s *GofigureServer) GofigureStat(ctx context.Context, req *pb.FilePath) (*p
 	return &result, nil
 }
 
-func (s *GofigureServer) GofigureFile(ctx context.Context, req *pb.FileRequest) (*pb.Result, error) {
+func (s *GofigureServer) GofigureFile(ctx context.Context, req *pb.FileRequest) (*pb.FileResult, error) {
 	path, mode, uid, gid, err := parseFileProperties(req)
 	if err != nil {
 		return nil, err
@@ -214,10 +214,10 @@ func (s *GofigureServer) GofigureFile(ctx context.Context, req *pb.FileRequest) 
 		return nil, err
 	}
 
-	return &pb.Result{Success: true}, nil
+	return &pb.FileResult{}, nil
 }
 
-func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequest) (*pb.Result, error) {
+func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequest) (*pb.DirectoryResult, error) {
 	path, mode, uid, gid, err := parseFileProperties(req)
 	if err != nil {
 		return nil, err
@@ -234,5 +234,5 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 		return nil, err
 	}
 
-	return &pb.Result{Success: true}, nil
+	return &pb.DirectoryResult{}, nil
 }

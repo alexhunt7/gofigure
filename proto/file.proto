@@ -59,7 +59,6 @@ message FileProperties {
   string mode = 4;
 }
 
-message Result {
-  bool success = 1;
-  string msg = 2;
-}
+message DirectoryResult {}
+message FileResult {}
+message DeleteResult {}
