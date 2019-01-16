@@ -23,7 +23,7 @@ package gofigure;
 service Gofigure {
   rpc GofigureDirectory (FileRequest) returns (DirectoryResult) {}
   rpc GofigureFile (FileRequest) returns (FileResult) {}
-  //rpc GofigureDelete (FilePath) returns (DeleteResult) {}
+  rpc GofigureDelete (DeleteRequest) returns (DeleteResult) {}
   rpc GofigureStat (FilePath) returns (StatResult) {}
   rpc GofigureExec (ExecRequest) returns (ExecResult) {}
   //rpc GofigureSymlink (FileRequest) returns (SymlinkResult) {}

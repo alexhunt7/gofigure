@@ -320,3 +320,73 @@ func BenchmarkGofigureFile(b *testing.B) {
 		}
 	}
 }
+
+func TestGofigureDelete(t *testing.T) {
+	// TODO test delete file
+	// TODO test delete empty dir
+	// TODO test delete dir with file in it
+	gs := &GofigureServer{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Errorf("Failed to get working directory: %v", err)
+	}
+
+	testdir := wd + "/testdata/dir"
+	testfile := testdir + "/afile"
+	err = os.RemoveAll(testdir)
+	if err != nil {
+		t.Errorf("Failed to remove testdir: %v", err)
+	}
+
+	err = os.MkdirAll(testdir, 0700)
+	if err != nil {
+		t.Errorf("Failed to create testdir: %v", err)
+	}
+
+	f, err := os.OpenFile(testfile, os.O_RDONLY|os.O_CREATE, 0700)
+	if err != nil {
+		t.Errorf("Failed to create testfile: %v", err)
+	}
+	f.Close()
+
+	req := &pb.DeleteRequest{
+		Path: testfile,
+	}
+	_, err = gs.GofigureDelete(ctx, req)
+	if err != nil {
+		t.Errorf("Failed to run GofigureDelete: %v", err)
+	}
+	req = &pb.DeleteRequest{
+		Path: testdir,
+	}
+	_, err = gs.GofigureDelete(ctx, req)
+	if err != nil {
+		t.Errorf("Failed to run GofigureDelete: %v", err)
+	}
+
+	err = os.MkdirAll(testdir, 0700)
+	if err != nil {
+		t.Errorf("Failed to create testdir: %v", err)
+	}
+
+	f, err = os.OpenFile(testfile, os.O_RDONLY|os.O_CREATE, 0700)
+	if err != nil {
+		t.Errorf("Failed to create testfile: %v", err)
+	}
+	f.Close()
+	_, err = gs.GofigureDelete(ctx, req)
+	if err == nil {
+		t.Errorf("Succeeded running GofigureDelete when it should have failed.")
+	}
+	req = &pb.DeleteRequest{
+		Path: testdir,
+		Recursive: true,
+	}
+	_, err = gs.GofigureDelete(ctx, req)
+	if err != nil {
+		t.Errorf("Failed to run GofigureDelete: %v", err)
+	}
+}

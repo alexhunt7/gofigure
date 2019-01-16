@@ -236,3 +236,17 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 
 	return &pb.DirectoryResult{}, nil
 }
+
+func (s *GofigureServer) GofigureDelete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResult, error) {
+	var err error
+	if req.Recursive {
+		err = os.RemoveAll(req.Path)
+	} else {
+		err = os.Remove(req.Path)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.DeleteResult{}, nil
+}

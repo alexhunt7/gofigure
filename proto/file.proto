@@ -20,6 +20,10 @@ package gofigure;
 message FilePath {
   string path = 1;
 }
+message DeleteRequest {
+  string path = 1;
+  bool recursive = 2;
+}
 
 message StatResult {
   int64 size = 1;
