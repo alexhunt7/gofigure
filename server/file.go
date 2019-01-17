@@ -125,6 +125,7 @@ func safeWrite(path string, content []byte, mode os.FileMode) error {
 	return nil
 }
 
+// Stat retrieves properties of a file or directory.
 func (s *GofigureServer) Stat(ctx context.Context, req *pb.FilePath) (*pb.StatResult, error) {
 	fstat, err := os.Stat(req.Path)
 	if err != nil {
@@ -160,6 +161,7 @@ func (s *GofigureServer) Stat(ctx context.Context, req *pb.FilePath) (*pb.StatRe
 	return &result, nil
 }
 
+// File creates a file with the specified mode, uid, gid, and contents.
 func (s *GofigureServer) File(ctx context.Context, req *pb.FileRequest) (*pb.FileResult, error) {
 	path, mode, uid, gid, err := parseFileProperties(req)
 	if err != nil {
@@ -217,6 +219,7 @@ func (s *GofigureServer) File(ctx context.Context, req *pb.FileRequest) (*pb.Fil
 	return &pb.FileResult{}, nil
 }
 
+// Directory creates a directory with the specified mode, uid, and gid.
 func (s *GofigureServer) Directory(ctx context.Context, req *pb.FileRequest) (*pb.DirectoryResult, error) {
 	path, mode, uid, gid, err := parseFileProperties(req)
 	if err != nil {
@@ -237,6 +240,7 @@ func (s *GofigureServer) Directory(ctx context.Context, req *pb.FileRequest) (*p
 	return &pb.DirectoryResult{}, nil
 }
 
+// Delete removes the specified file or directory, optionally recursively.
 func (s *GofigureServer) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResult, error) {
 	var err error
 	if req.Recursive {

@@ -23,4 +23,5 @@ as well as process execution.
 */
 package server
 
+// GofigureServer implements the remote side of the gofigure service.
 type GofigureServer struct{}
