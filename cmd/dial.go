@@ -51,10 +51,10 @@ func dial(cmd *cobra.Command, args []string) {
 	}
 	defer conn.Close()
 	client := &gclient.Client{pb.NewGofigureClient(conn)}
-	client.CreateDir("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf")
-	client.CreateFile("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf/qwer")
-	client.Stat("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf/qwer")
-	client.Exec("echo", "hello", "world")
+	client.RemoteDirectory("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf")
+	client.RemoteFile("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf/qwer")
+	client.RemoteStat("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf/qwer")
+	client.RemoteExec("echo", "hello", "world")
 }
 
 func init() {

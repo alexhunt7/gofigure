@@ -21,11 +21,11 @@ import "exec.proto";
 package gofigure;
 
 service Gofigure {
-  rpc GofigureDirectory (FileRequest) returns (DirectoryResult) {}
-  rpc GofigureFile (FileRequest) returns (FileResult) {}
-  rpc GofigureDelete (DeleteRequest) returns (DeleteResult) {}
-  rpc GofigureStat (FilePath) returns (StatResult) {}
-  rpc GofigureExec (ExecRequest) returns (ExecResult) {}
-  //rpc GofigureSymlink (FileRequest) returns (SymlinkResult) {}
-  //rpc GofigureHardlink (FileRequest) returns (HardlinkResult) {}
+  rpc Directory (FileRequest) returns (DirectoryResult) {}
+  rpc File (FileRequest) returns (FileResult) {}
+  rpc Delete (DeleteRequest) returns (DeleteResult) {}
+  rpc Stat (FilePath) returns (StatResult) {}
+  rpc Exec (ExecRequest) returns (ExecResult) {}
+  //rpc Symlink (FileRequest) returns (SymlinkResult) {}
+  //rpc Hardlink (FileRequest) returns (HardlinkResult) {}
 }

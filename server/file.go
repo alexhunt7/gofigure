@@ -125,7 +125,7 @@ func safeWrite(path string, content []byte, mode os.FileMode) error {
 	return nil
 }
 
-func (s *GofigureServer) GofigureStat(ctx context.Context, req *pb.FilePath) (*pb.StatResult, error) {
+func (s *GofigureServer) Stat(ctx context.Context, req *pb.FilePath) (*pb.StatResult, error) {
 	fstat, err := os.Stat(req.Path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -160,7 +160,7 @@ func (s *GofigureServer) GofigureStat(ctx context.Context, req *pb.FilePath) (*p
 	return &result, nil
 }
 
-func (s *GofigureServer) GofigureFile(ctx context.Context, req *pb.FileRequest) (*pb.FileResult, error) {
+func (s *GofigureServer) File(ctx context.Context, req *pb.FileRequest) (*pb.FileResult, error) {
 	path, mode, uid, gid, err := parseFileProperties(req)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func (s *GofigureServer) GofigureFile(ctx context.Context, req *pb.FileRequest) 
 	return &pb.FileResult{}, nil
 }
 
-func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequest) (*pb.DirectoryResult, error) {
+func (s *GofigureServer) Directory(ctx context.Context, req *pb.FileRequest) (*pb.DirectoryResult, error) {
 	path, mode, uid, gid, err := parseFileProperties(req)
 	if err != nil {
 		return nil, err
@@ -237,7 +237,7 @@ func (s *GofigureServer) GofigureDirectory(ctx context.Context, req *pb.FileRequ
 	return &pb.DirectoryResult{}, nil
 }
 
-func (s *GofigureServer) GofigureDelete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResult, error) {
+func (s *GofigureServer) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResult, error) {
 	var err error
 	if req.Recursive {
 		err = os.RemoveAll(req.Path)

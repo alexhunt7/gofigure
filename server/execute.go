@@ -24,10 +24,10 @@ import (
 	"syscall"
 )
 
-// GofigureExec executes a command specified in an ExecRequest
+// Exec executes a command specified in an ExecRequest
 // and returns the resulting ReturnCode, Stdout, and Stderr
 // in an ExecResult.
-func (s *GofigureServer) GofigureExec(ctx context.Context, req *pb.ExecRequest) (*pb.ExecResult, error) {
+func (s *GofigureServer) Exec(ctx context.Context, req *pb.ExecRequest) (*pb.ExecResult, error) {
 	// https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
 	// TODO env
 	// TODO stdin

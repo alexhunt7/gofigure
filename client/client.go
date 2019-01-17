@@ -35,7 +35,7 @@ type Client struct {
 	pb.GofigureClient
 }
 
-func (client Client) Exec(executable string, args ...string) {
+func (client Client) RemoteExec(executable string, args ...string) {
 	log.Printf("runExec")
 	request := &pb.ExecRequest{
 		Executable: executable,
@@ -45,8 +45,8 @@ func (client Client) Exec(executable string, args ...string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	log.Printf("Created context")
-	response, err := client.GofigureExec(ctx, request)
-	log.Printf("ran client.GofigureExec")
+	response, err := client.Exec(ctx, request)
+	log.Printf("ran client.Exec")
 	if err != nil {
 		log.Printf("failed to exec")
 		log.Fatal(err)
@@ -55,7 +55,7 @@ func (client Client) Exec(executable string, args ...string) {
 	log.Printf("stderr: %s", response.Stderr)
 }
 
-func (client Client) Stat(path string) {
+func (client Client) RemoteStat(path string) {
 	log.Printf("runStat")
 	request := &pb.FilePath{
 		Path: path,
@@ -64,8 +64,8 @@ func (client Client) Stat(path string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	log.Printf("Created context")
-	response, err := client.GofigureStat(ctx, request)
-	log.Printf("ran client.GofigureStat")
+	response, err := client.Stat(ctx, request)
+	log.Printf("ran client.Stat")
 	//log.Printf(response.Msg)
 	if err != nil {
 		log.Printf("failed to stat file")
@@ -76,7 +76,7 @@ func (client Client) Stat(path string) {
 	log.Printf("mode: %s", response.Mode)
 }
 
-func (client Client) CreateFile(path string) {
+func (client Client) RemoteFile(path string) {
 	log.Printf("runCreateDir")
 	request := &pb.FileRequest{
 		Properties: &pb.FileProperties{
@@ -91,9 +91,9 @@ func (client Client) CreateFile(path string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	log.Printf("Created context")
-	//response, err := client.GofigureDirectory(ctx, request)
-	_, err := client.GofigureFile(ctx, request)
-	log.Printf("ran client.GofigureFile")
+	//response, err := client.Directory(ctx, request)
+	_, err := client.File(ctx, request)
+	log.Printf("ran client.File")
 	//log.Printf(response.Msg)
 	if err != nil {
 		log.Printf("failed to create file")
@@ -101,7 +101,7 @@ func (client Client) CreateFile(path string) {
 	}
 }
 
-func (client Client) CreateDir(path string) {
+func (client Client) RemoteDirectory(path string) {
 	log.Printf("runCreateDir")
 	request := &pb.FileRequest{
 		Properties: &pb.FileProperties{
@@ -115,9 +115,9 @@ func (client Client) CreateDir(path string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	log.Printf("Created context")
-	//response, err := client.GofigureDirectory(ctx, request)
-	_, err := client.GofigureDirectory(ctx, request)
-	log.Printf("ran client.GofigureDirectory")
+	//response, err := client.Directory(ctx, request)
+	_, err := client.Directory(ctx, request)
+	log.Printf("ran client.Directory")
 	//log.Printf(response.Msg)
 	if err != nil {
 		log.Printf("failed to create dir")

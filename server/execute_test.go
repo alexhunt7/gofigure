@@ -7,7 +7,7 @@ import (
 )
 
 //https://stackoverflow.com/questions/42102496/testing-a-grpc-service
-func TestGofigureExec(t *testing.T) {
+func TestExec(t *testing.T) {
 	s := GofigureServer{}
 
 	tests := []struct {
@@ -57,25 +57,25 @@ func TestGofigureExec(t *testing.T) {
 			Stdin:      tt.stdin,
 			Env:        tt.env,
 		}
-		resp, err := s.GofigureExec(context.Background(), &req)
+		resp, err := s.Exec(context.Background(), &req)
 		if tt.shouldErr {
 			if err == nil {
-				t.Errorf("TestGofigureExec did not error as expected")
+				t.Errorf("TestExec did not error as expected")
 			}
 			continue
 		} else {
 			if err != nil {
-				t.Errorf("TestGofigureExec got unexpected error: %v", err)
+				t.Errorf("TestExec got unexpected error: %v", err)
 			}
 		}
 		if resp.ReturnCode != tt.expectedReturnCode {
-			t.Errorf("TestGofigureExec return code, %v != %v", tt.expectedReturnCode, resp.ReturnCode)
+			t.Errorf("TestExec return code, %v != %v", tt.expectedReturnCode, resp.ReturnCode)
 		}
 		if resp.Stdout != tt.expectedStdout {
-			t.Errorf("TestGofigureExec stdout, %v != %v", tt.expectedStdout, resp.Stdout)
+			t.Errorf("TestExec stdout, %v != %v", tt.expectedStdout, resp.Stdout)
 		}
 		if resp.Stderr != tt.expectedStderr {
-			t.Errorf("TestGofigureExec stderr, %v != %v", tt.expectedStderr, resp.Stderr)
+			t.Errorf("TestExec stderr, %v != %v", tt.expectedStderr, resp.Stderr)
 		}
 	}
 }
