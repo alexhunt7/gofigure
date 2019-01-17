@@ -76,13 +76,11 @@ func loadCredentials(caFile string, certFile string, keyFile string) (credential
 
 	peerCert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		fmt.Errorf("load peer cert/key error: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("load peer cert/key error: %v", err)
 	}
 	caCert, err := ioutil.ReadFile(caFile)
 	if err != nil {
-		fmt.Errorf("read ca cert file error: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("read ca cert file error: %v", err)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
