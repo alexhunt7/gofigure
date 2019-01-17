@@ -13,6 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+/*
+Package server implements the remote side of the gofigure
+configuration management tool.
+
+It includes functions for creating and deleting files and directories,
+as well as process execution.
+*/
 package server
 
 type GofigureServer struct{}

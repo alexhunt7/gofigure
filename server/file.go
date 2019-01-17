@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package server
 
 import (
@@ -71,7 +72,7 @@ func parseFileProperties(req *pb.FileRequest) (string, os.FileMode, int, int, er
 
 	// enforce full path
 	if !filepath.IsAbs(path) {
-		return path, mode, uid, gid, errors.New("Must be an absolute path.")
+		return path, mode, uid, gid, errors.New("must be an absolute path")
 	}
 
 	// Get user ID
@@ -129,9 +130,8 @@ func (s *GofigureServer) GofigureStat(ctx context.Context, req *pb.FilePath) (*p
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &pb.StatResult{Exists: false}, nil
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 
 	statt := fstat.Sys().(*syscall.Stat_t)
@@ -166,12 +166,12 @@ func (s *GofigureServer) GofigureFile(ctx context.Context, req *pb.FileRequest) 
 		return nil, err
 	}
 
-	needs_write := false
+	needsWrite := false
 	// Open the file
 	f, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			needs_write = true
+			needsWrite = true
 		} else {
 			return nil, err
 		}
@@ -183,20 +183,20 @@ func (s *GofigureServer) GofigureFile(ctx context.Context, req *pb.FileRequest) 
 		if _, err := io.Copy(hasher, f); err != nil {
 			return nil, err
 		}
-		existing_sum := hasher.Sum(nil)
+		existingSum := hasher.Sum(nil)
 
 		hasher.Reset()
 		// TODO handle streaming?
 		// TODO hash on the controller side?
 		hasher.Write(req.Content)
-		content_sum := hasher.Sum(nil)
+		contentSum := hasher.Sum(nil)
 
-		if !bytes.Equal(existing_sum, content_sum) {
-			needs_write = true
+		if !bytes.Equal(existingSum, contentSum) {
+			needsWrite = true
 		}
 	}
 
-	if needs_write {
+	if needsWrite {
 		err = safeWrite(path, req.Content, mode)
 		if err != nil {
 			return nil, err

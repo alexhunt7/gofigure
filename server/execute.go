@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package server
 
 import (
@@ -23,6 +24,9 @@ import (
 	"syscall"
 )
 
+// GofigureExec executes a command specified in an ExecRequest
+// and returns the resulting ReturnCode, Stdout, and Stderr
+// in an ExecResult.
 func (s *GofigureServer) GofigureExec(ctx context.Context, req *pb.ExecRequest) (*pb.ExecResult, error) {
 	// https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
 	// TODO env

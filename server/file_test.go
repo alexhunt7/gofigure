@@ -59,8 +59,8 @@ func TestParseFileProperties(t *testing.T) {
 		fileRequest  *pb.FileRequest
 		expectedPath string
 		expectedMode os.FileMode
-		expectedUid  int
-		expectedGid  int
+		expectedUID  int
+		expectedGID  int
 		shouldErr    bool
 	}{
 		// TODO find a way to test this stuff cross environment. Mock? Docker?
@@ -75,8 +75,8 @@ func TestParseFileProperties(t *testing.T) {
 				},
 			},
 			expectedPath: "/home/alex/git",
-			expectedUid:  1000,
-			expectedGid:  1000,
+			expectedUID:  1000,
+			expectedGID:  1000,
 			expectedMode: os.FileMode(uint(448)),
 		},
 		{
@@ -90,8 +90,8 @@ func TestParseFileProperties(t *testing.T) {
 				},
 			},
 			expectedPath: "/home/alex",
-			expectedUid:  1000,
-			expectedGid:  1000,
+			expectedUID:  1000,
+			expectedGID:  1000,
 			expectedMode: os.FileMode(uint(448)),
 		},
 		// TODO make it trim relative paths
@@ -106,8 +106,8 @@ func TestParseFileProperties(t *testing.T) {
 		//		},
 		//	},
 		//	expectedPath: "/home/alex/git",
-		//	expectedUid:  1000,
-		//	expectedGid:  1000,
+		//	expectedUID:  1000,
+		//	expectedGID:  1000,
 		//	expectedMode: os.FileMode(uint(448)),
 		//},
 		{
@@ -177,11 +177,11 @@ func TestParseFileProperties(t *testing.T) {
 		if mode != tt.expectedMode {
 			t.Errorf("TestParseFileProperties mode, %v != %v", mode, tt.expectedMode)
 		}
-		if uid != tt.expectedUid {
-			t.Errorf("TestParseFileProperties uid, %v != %v", uid, tt.expectedUid)
+		if uid != tt.expectedUID {
+			t.Errorf("TestParseFileProperties uid, %v != %v", uid, tt.expectedUID)
 		}
-		if gid != tt.expectedGid {
-			t.Errorf("TestParseFileProperties gid, %v != %v", gid, tt.expectedGid)
+		if gid != tt.expectedGID {
+			t.Errorf("TestParseFileProperties gid, %v != %v", gid, tt.expectedGID)
 		}
 	}
 }
