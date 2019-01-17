@@ -44,7 +44,7 @@ func TestGofigureExec(t *testing.T) {
 			expectedStderr:     "goodbye world\n",
 		},
 		{
-			// test it throws an err with a non-existant executable
+			// test it throws an err with a non-existent executable
 			executable: "asdflkjas",
 			shouldErr:  true,
 		},

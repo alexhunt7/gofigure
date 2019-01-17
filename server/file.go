@@ -59,7 +59,7 @@ func ownMod(path string, mode os.FileMode, uid int, gid int) error {
 func parseFileProperties(req *pb.FileRequest) (string, os.FileMode, int, int, error) {
 	props := req.Properties
 	path := props.Path
-	mode := os.FileMode(0)
+	var mode os.FileMode
 	uid := 0
 	gid := 0
 

@@ -135,7 +135,7 @@ func TestParseFileProperties(t *testing.T) {
 			shouldErr: true,
 		},
 		{
-			// Check that it errors on non-existant uid
+			// Check that it errors on non-existent uid
 			fileRequest: &pb.FileRequest{
 				Properties: &pb.FileProperties{
 					Path:  "/home/alex",
@@ -147,7 +147,7 @@ func TestParseFileProperties(t *testing.T) {
 			shouldErr: true,
 		},
 		{
-			// Check that it errors on non-existant gid
+			// Check that it errors on non-existent gid
 			fileRequest: &pb.FileRequest{
 				Properties: &pb.FileProperties{
 					Path:  "/home/alex",
