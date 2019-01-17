@@ -18,10 +18,10 @@ import (
 	"fmt"
 	pb "github.com/alexhunt7/gofigure/proto"
 	server "github.com/alexhunt7/gofigure/server"
-	"log"
-	"net"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"log"
+	"net"
 )
 
 // serveCmd represents the serve command

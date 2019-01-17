@@ -382,7 +382,7 @@ func TestGofigureDelete(t *testing.T) {
 		t.Errorf("Succeeded running GofigureDelete when it should have failed.")
 	}
 	req = &pb.DeleteRequest{
-		Path: testdir,
+		Path:      testdir,
 		Recursive: true,
 	}
 	_, err = gs.GofigureDelete(ctx, req)

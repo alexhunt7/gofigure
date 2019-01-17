@@ -16,10 +16,10 @@ package cmd
 
 import (
 	"fmt"
-	pb "github.com/alexhunt7/gofigure/proto"
 	gclient "github.com/alexhunt7/gofigure/client"
-	"google.golang.org/grpc"
+	pb "github.com/alexhunt7/gofigure/proto"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 	"log"
 )
 
@@ -46,10 +46,10 @@ func dial(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(creds))
-        if err != nil {
-                log.Fatalf("fail to dial: %v", err)
-        }
-        defer conn.Close()
+	if err != nil {
+		log.Fatalf("fail to dial: %v", err)
+	}
+	defer conn.Close()
 	client := &gclient.Client{pb.NewGofigureClient(conn)}
 	client.CreateDir("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf")
 	client.CreateFile("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf/qwer")

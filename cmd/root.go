@@ -19,9 +19,9 @@ import (
 	"crypto/x509"
 	"fmt"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/credentials"
 	"io/ioutil"
 	"os"
-	"google.golang.org/grpc/credentials"
 )
 
 var (
