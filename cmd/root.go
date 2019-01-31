@@ -66,9 +66,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&caFile, "caFile", "", "Path to CA certificate file.")
 	rootCmd.PersistentFlags().StringVar(&certFile, "certFile", "", "Path to certificate file.")
 	rootCmd.PersistentFlags().StringVar(&keyFile, "keyFile", "", "Path to certificate key file.")
-	rootCmd.MarkPersistentFlagRequired("caFile")
-	rootCmd.MarkPersistentFlagRequired("certFile")
-	rootCmd.MarkPersistentFlagRequired("keyFile")
+	//rootCmd.MarkPersistentFlagRequired("caFile")
+	//rootCmd.MarkPersistentFlagRequired("certFile")
+	//rootCmd.MarkPersistentFlagRequired("keyFile")
 }
 
 func loadCredentials(caFile string, certFile string, keyFile string) (credentials.TransportCredentials, error) {
