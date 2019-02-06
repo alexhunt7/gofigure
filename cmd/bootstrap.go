@@ -15,21 +15,21 @@
 package cmd
 
 import (
+	"github.com/alexhunt7/ssher"
 	"github.com/pkg/sftp"
 	"github.com/spf13/cobra"
-	"github.com/alexhunt7/ssher"
 	"golang.org/x/crypto/ssh"
-	"log"
-	"path"
-	"os"
 	"io"
+	"log"
+	"os"
+	"path"
 )
 
 // bootstrapCmd represents the bootstrap command
 var (
 	bootstrapCmd = &cobra.Command{
 		Use:   "bootstrap [flags] host1 [host2] [host3] [...]",
-		Args: cobra.MinimumNArgs(1),
+		Args:  cobra.MinimumNArgs(1),
 		Short: "A brief description of your command",
 		Long: `A longer description that spans multiple lines and likely contains examples
 	and usage of using your command. For example:

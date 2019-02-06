@@ -38,7 +38,7 @@ type Client struct {
 	pb.GofigureClient
 }
 
-// RemoteExec calls Exec on the remote GofigureServer.
+// RemoteExec calls Exec on the remote Minion.
 func (client Client) RemoteExec(executable string, args ...string) {
 	log.Printf("runExec")
 	request := &pb.ExecRequest{
@@ -59,7 +59,7 @@ func (client Client) RemoteExec(executable string, args ...string) {
 	log.Printf("stderr: %s", response.Stderr)
 }
 
-// RemoteStat calls Stat on the remote GofigureServer.
+// RemoteStat calls Stat on the remote Minion.
 func (client Client) RemoteStat(path string) {
 	log.Printf("runStat")
 	request := &pb.FilePath{
@@ -81,7 +81,7 @@ func (client Client) RemoteStat(path string) {
 	log.Printf("mode: %s", response.Mode)
 }
 
-// RemoteFile calls File on the remote GofigureServer.
+// RemoteFile calls File on the remote Minion.
 func (client Client) RemoteFile(path string) {
 	log.Printf("runCreateDir")
 	request := &pb.FileRequest{
@@ -107,7 +107,7 @@ func (client Client) RemoteFile(path string) {
 	}
 }
 
-// RemoteDirectory calls Directory on the remote GofigureServer.
+// RemoteDirectory calls Directory on the remote Minion.
 func (client Client) RemoteDirectory(path string) {
 	log.Printf("runCreateDir")
 	request := &pb.FileRequest{

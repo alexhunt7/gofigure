@@ -16,8 +16,8 @@ package cmd
 
 import (
 	"fmt"
+	minion "github.com/alexhunt7/gofigure/minion"
 	pb "github.com/alexhunt7/gofigure/proto"
-	server "github.com/alexhunt7/gofigure/server"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"log"
@@ -60,7 +60,7 @@ func serve(cmd *cobra.Command, args []string) {
 	}
 
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
-	pb.RegisterGofigureServer(grpcServer, &server.GofigureServer{})
+	pb.RegisterGofigureServer(grpcServer, &minion.Minion{})
 	grpcServer.Serve(lis)
 }
 

@@ -15,13 +15,13 @@ limitations under the License.
 */
 
 /*
-Package server implements the remote side of the gofigure
+Package minion implements the remote side of the gofigure
 configuration management tool.
 
 It includes functions for creating and deleting files and directories,
 as well as process execution.
 */
-package server
+package minion
 
-// GofigureServer implements the remote side of the gofigure service.
-type GofigureServer struct{}
+// Minion implements the remote side of the gofigure service.
+type Minion struct{}

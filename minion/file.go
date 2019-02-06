@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package server
+package minion
 
 import (
 	"bytes"
@@ -126,7 +126,7 @@ func safeWrite(path string, content []byte, mode os.FileMode) error {
 }
 
 // Stat retrieves properties of a file or directory.
-func (s *GofigureServer) Stat(ctx context.Context, req *pb.FilePath) (*pb.StatResult, error) {
+func (s *Minion) Stat(ctx context.Context, req *pb.FilePath) (*pb.StatResult, error) {
 	fstat, err := os.Stat(req.Path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -162,7 +162,7 @@ func (s *GofigureServer) Stat(ctx context.Context, req *pb.FilePath) (*pb.StatRe
 }
 
 // File creates a file with the specified mode, uid, gid, and contents.
-func (s *GofigureServer) File(ctx context.Context, req *pb.FileRequest) (*pb.FileResult, error) {
+func (s *Minion) File(ctx context.Context, req *pb.FileRequest) (*pb.FileResult, error) {
 	path, mode, uid, gid, err := parseFileProperties(req)
 	if err != nil {
 		return nil, err
@@ -220,7 +220,7 @@ func (s *GofigureServer) File(ctx context.Context, req *pb.FileRequest) (*pb.Fil
 }
 
 // Directory creates a directory with the specified mode, uid, and gid.
-func (s *GofigureServer) Directory(ctx context.Context, req *pb.FileRequest) (*pb.DirectoryResult, error) {
+func (s *Minion) Directory(ctx context.Context, req *pb.FileRequest) (*pb.DirectoryResult, error) {
 	path, mode, uid, gid, err := parseFileProperties(req)
 	if err != nil {
 		return nil, err
@@ -241,7 +241,7 @@ func (s *GofigureServer) Directory(ctx context.Context, req *pb.FileRequest) (*p
 }
 
 // Delete removes the specified file or directory, optionally recursively.
-func (s *GofigureServer) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResult, error) {
+func (s *Minion) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.DeleteResult, error) {
 	var err error
 	if req.Recursive {
 		err = os.RemoveAll(req.Path)

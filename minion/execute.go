@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package server
+package minion
 
 import (
 	"bytes"
@@ -27,7 +27,7 @@ import (
 // Exec executes a command specified in an ExecRequest
 // and returns the resulting ReturnCode, Stdout, and Stderr
 // in an ExecResult.
-func (s *GofigureServer) Exec(ctx context.Context, req *pb.ExecRequest) (*pb.ExecResult, error) {
+func (s *Minion) Exec(ctx context.Context, req *pb.ExecRequest) (*pb.ExecResult, error) {
 	// https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
 	// TODO env
 	// TODO stdin

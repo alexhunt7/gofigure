@@ -50,7 +50,7 @@ func dial(cmd *cobra.Command, args []string) {
 		log.Fatalf("fail to dial: %v", err)
 	}
 	defer conn.Close()
-	client := &gclient.Client{pb.NewGofigureClient(conn)}
+	client := &gclient.Client{GofigureClient: pb.NewGofigureClient(conn)}
 	client.RemoteDirectory("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf")
 	client.RemoteFile("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf/qwer")
 	client.RemoteStat("/home/alex/go/src/github.com/alexhunt7/gofigure/asdf/qwer")

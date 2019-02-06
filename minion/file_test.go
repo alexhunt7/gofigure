@@ -1,4 +1,4 @@
-package server
+package minion
 
 import (
 	pb "github.com/alexhunt7/gofigure/proto"
@@ -187,7 +187,7 @@ func TestParseFileProperties(t *testing.T) {
 }
 
 func TestFile(t *testing.T) {
-	gs := &GofigureServer{}
+	minion := &Minion{}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -203,7 +203,7 @@ func TestFile(t *testing.T) {
 	}
 
 	statReq := &pb.FilePath{Path: testfile}
-	stat, err := gs.Stat(ctx, statReq)
+	stat, err := minion.Stat(ctx, statReq)
 	if err != nil {
 		t.Errorf("Failed to run Stat: %v", err)
 	}
@@ -225,7 +225,7 @@ func TestFile(t *testing.T) {
 		},
 	}
 
-	_, err = gs.Directory(ctx, req)
+	_, err = minion.Directory(ctx, req)
 	if err != nil {
 		t.Errorf("Failed to run Directory: %v", err)
 	}
@@ -233,12 +233,12 @@ func TestFile(t *testing.T) {
 	req.Content = []byte("Hello world!\n")
 	req.Properties.Path = testfile
 
-	_, err = gs.File(ctx, req)
+	_, err = minion.File(ctx, req)
 	if err != nil {
 		t.Errorf("Failed to run File: %v", err)
 	}
 
-	stat, err = gs.Stat(ctx, statReq)
+	stat, err = minion.Stat(ctx, statReq)
 	if err != nil {
 		t.Errorf("Failed to run Stat: %v", err)
 	}
@@ -261,11 +261,11 @@ func TestFile(t *testing.T) {
 	}
 
 	req.Properties.Mode = "0600"
-	_, err = gs.File(ctx, req)
+	_, err = minion.File(ctx, req)
 	if err != nil {
 		t.Errorf("Failed to run File: %v", err)
 	}
-	stat, err = gs.Stat(ctx, statReq)
+	stat, err = minion.Stat(ctx, statReq)
 	if err != nil {
 		t.Errorf("Failed to run Stat: %v", err)
 	}
@@ -275,7 +275,7 @@ func TestFile(t *testing.T) {
 }
 
 func BenchmarkFile(b *testing.B) {
-	gs := &GofigureServer{}
+	minion := &Minion{}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -303,7 +303,7 @@ func BenchmarkFile(b *testing.B) {
 		},
 	}
 
-	_, err = gs.Directory(ctx, req)
+	_, err = minion.Directory(ctx, req)
 	if err != nil {
 		b.Errorf("Failed to run Directory: %v", err)
 	}
@@ -314,7 +314,7 @@ func BenchmarkFile(b *testing.B) {
 		//req.Properties.Path = fmt.Sprintf("%s/%d", testdir, i)
 		req.Properties.Path = testdir + "/" + strconv.Itoa(i)
 
-		_, err = gs.File(ctx, req)
+		_, err = minion.File(ctx, req)
 		if err != nil {
 			b.Errorf("Failed to run File: %v", err)
 		}
@@ -325,7 +325,7 @@ func TestDelete(t *testing.T) {
 	// TODO test delete file
 	// TODO test delete empty dir
 	// TODO test delete dir with file in it
-	gs := &GofigureServer{}
+	minion := &Minion{}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -355,14 +355,14 @@ func TestDelete(t *testing.T) {
 	req := &pb.DeleteRequest{
 		Path: testfile,
 	}
-	_, err = gs.Delete(ctx, req)
+	_, err = minion.Delete(ctx, req)
 	if err != nil {
 		t.Errorf("Failed to run Delete: %v", err)
 	}
 	req = &pb.DeleteRequest{
 		Path: testdir,
 	}
-	_, err = gs.Delete(ctx, req)
+	_, err = minion.Delete(ctx, req)
 	if err != nil {
 		t.Errorf("Failed to run Delete: %v", err)
 	}
@@ -377,7 +377,7 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Failed to create testfile: %v", err)
 	}
 	f.Close()
-	_, err = gs.Delete(ctx, req)
+	_, err = minion.Delete(ctx, req)
 	if err == nil {
 		t.Errorf("Succeeded running Delete when it should have failed.")
 	}
@@ -385,7 +385,7 @@ func TestDelete(t *testing.T) {
 		Path:      testdir,
 		Recursive: true,
 	}
-	_, err = gs.Delete(ctx, req)
+	_, err = minion.Delete(ctx, req)
 	if err != nil {
 		t.Errorf("Failed to run Delete: %v", err)
 	}

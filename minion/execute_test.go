@@ -1,4 +1,4 @@
-package server
+package minion
 
 import (
 	pb "github.com/alexhunt7/gofigure/proto"
@@ -8,7 +8,7 @@ import (
 
 //https://stackoverflow.com/questions/42102496/testing-a-grpc-service
 func TestExec(t *testing.T) {
-	s := GofigureServer{}
+	minion := Minion{}
 
 	tests := []struct {
 		executable         string
@@ -57,7 +57,7 @@ func TestExec(t *testing.T) {
 			Stdin:      tt.stdin,
 			Env:        tt.env,
 		}
-		resp, err := s.Exec(context.Background(), &req)
+		resp, err := minion.Exec(context.Background(), &req)
 		if tt.shouldErr {
 			if err == nil {
 				t.Errorf("TestExec did not error as expected")
