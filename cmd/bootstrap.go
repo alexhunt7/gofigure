@@ -15,14 +15,10 @@
 package cmd
 
 import (
-	"github.com/alexhunt7/ssher"
-	"github.com/pkg/sftp"
+	"github.com/alexhunt7/gofigure/client"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
-	"io"
 	"log"
-	"os"
-	"path"
 )
 
 // bootstrapCmd represents the bootstrap command
@@ -40,51 +36,16 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Println("bootstrap called")
 			log.Println(len(args))
-			connectSuccess, connectFailure := make(chan int), make(chan error)
+			successChan, failChan := make(chan ssh.Conn), make(chan error)
 			for i, host := range args {
 				log.Println(i, host)
-				go func(host, configFile string, i int) {
-					conn, err := connect(host, configFile)
-					if err != nil {
-						connectFailure <- err
-						return
-					}
-					defer conn.Close()
-
-					sftpClient, err := sftp.NewClient(conn)
-					if err != nil {
-						connectFailure <- err
-						return
-					}
-					defer sftpClient.Close()
-
-					executable := path.Base(os.Args[0])
-					w, err := sftpClient.Create(executable)
-					if err != nil {
-						connectFailure <- err
-						return
-					}
-
-					r, err := os.Open(os.Args[0])
-					if err != nil {
-						connectFailure <- err
-						return
-					}
-
-					_, err = io.Copy(w, r)
-					if err != nil {
-						connectFailure <- err
-						return
-					}
-
-					connectSuccess <- i
-				}(host, configFile, i)
+				go client.Bootstrap(host, configFile, successChan, failChan)
 			}
 			for i := 0; i < len(args); i++ {
 				select {
-				case res := <-connectSuccess:
+				case res := <-successChan:
 					log.Println(res)
-				case err := <-connectFailure:
+				case err := <-failChan:
 					log.Println(err)
 				}
 			}
@@ -92,18 +53,6 @@ var (
 	}
 	configFile string
 )
-
-func connect(host, configFile string) (*ssh.Client, error) {
-	config, connectString, err := ssher.ClientConfig(host, configFile)
-	if err != nil {
-		return nil, err
-	}
-	conn, err := ssh.Dial("tcp", connectString, config)
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
 
 func init() {
 	rootCmd.AddCommand(bootstrapCmd)
