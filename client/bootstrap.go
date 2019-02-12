@@ -24,6 +24,7 @@ func Bootstrap(host, configFile string, successChan chan<- ssh.Conn, failChan ch
 	}
 	defer sftpClient.Close()
 
+	// TODO pass this in?
 	executable := path.Base(os.Args[0])
 	w, err := sftpClient.Create(executable)
 	if err != nil {
@@ -38,6 +39,14 @@ func Bootstrap(host, configFile string, successChan chan<- ssh.Conn, failChan ch
 	}
 
 	_, err = io.Copy(w, r)
+	if err != nil {
+		failChan <- err
+		return
+	}
+
+	// TODO fsync?
+
+	err = sftpClient.Chmod(executable, 0700)
 	if err != nil {
 		failChan <- err
 		return
