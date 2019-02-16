@@ -17,7 +17,6 @@ package cmd
 import (
 	"github.com/alexhunt7/gofigure/client"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ssh"
 	"log"
 )
 
@@ -36,7 +35,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Println("bootstrap called")
 			log.Println(len(args))
-			successChan, failChan := make(chan ssh.Conn), make(chan error)
+			successChan, failChan := make(chan string), make(chan error)
 			for i, host := range args {
 				log.Println(i, host)
 				go client.Bootstrap(host, configFile, successChan, failChan)
@@ -44,7 +43,7 @@ var (
 			for i := 0; i < len(args); i++ {
 				select {
 				case res := <-successChan:
-					log.Println(res)
+					log.Println("success " + res)
 				case err := <-failChan:
 					log.Println(err)
 				}

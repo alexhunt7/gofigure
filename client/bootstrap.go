@@ -7,9 +7,37 @@ import (
 	"io"
 	"os"
 	"path"
+	"time"
 )
 
-func Bootstrap(host, configFile string, successChan chan<- ssh.Conn, failChan chan<- error) {
+func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error {
+	r, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	w, err := sftpClient.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer w.Close()
+
+	err = sftpClient.Chmod(dst, perms)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(w, r)
+	if err != nil {
+		return err
+	}
+
+	// TODO fsync?
+	return nil
+}
+
+func Bootstrap(host, configFile string, successChan chan<- string, failChan chan<- error) {
 	conn, err := Connect(host, configFile)
 	if err != nil {
 		failChan <- err
@@ -26,33 +54,37 @@ func Bootstrap(host, configFile string, successChan chan<- ssh.Conn, failChan ch
 
 	// TODO pass this in?
 	executable := path.Base(os.Args[0])
-	w, err := sftpClient.Create(executable)
+	err = putfile(sftpClient, os.Args[0], executable, 0700)
 	if err != nil {
 		failChan <- err
 		return
 	}
 
-	r, err := os.Open(os.Args[0])
+	// TODO pass these in
+	for _, filename := range []string{"ca-cert.pem", "cert.pem", "key.pem"} {
+		err = putfile(sftpClient, "testdata/"+filename, filename, 0600)
+		if err != nil {
+			failChan <- err
+			return
+		}
+	}
+
+	session, err := conn.NewSession()
+	if err != nil {
+		failChan <- err
+		return
+	}
+	defer session.Close()
+
+	err = session.Start("./" + executable + " serve --caFile ca-cert.pem --certFile cert.pem --keyFile key.pem")
 	if err != nil {
 		failChan <- err
 		return
 	}
 
-	_, err = io.Copy(w, r)
-	if err != nil {
-		failChan <- err
-		return
-	}
+	time.Sleep(1 * time.Second)
 
-	// TODO fsync?
-
-	err = sftpClient.Chmod(executable, 0700)
-	if err != nil {
-		failChan <- err
-		return
-	}
-
-	successChan <- conn
+	successChan <- host
 }
 
 func Connect(host, configFile string) (*ssh.Client, error) {

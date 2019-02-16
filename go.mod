@@ -1,7 +1,7 @@
 module github.com/alexhunt7/gofigure
 
 require (
-	github.com/alexhunt7/ssher v0.0.0-20190130064908-bdc0db4f956e
+	github.com/alexhunt7/ssher v0.0.0-20190216204854-d36569cf7047
 	github.com/golang/protobuf v1.2.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
