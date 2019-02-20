@@ -17,6 +17,7 @@ package cmd
 import (
 	"github.com/alexhunt7/gofigure/client"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 	"log"
 )
 
@@ -35,15 +36,22 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Println("bootstrap called")
 			log.Println(len(args))
-			successChan, failChan := make(chan string), make(chan error)
+			successChan, failChan := make(chan *grpc.ClientConn), make(chan error)
 			for i, host := range args {
 				log.Println(i, host)
-				go client.Bootstrap(host, configFile, successChan, failChan)
+				go func(host, configFile string, successChan chan<- *grpc.ClientConn, failChan chan<- error) {
+					grpcConn, err := client.Bootstrap(host, configFile)
+					if err != nil {
+						failChan <- err
+						return
+					}
+					successChan <- grpcConn
+				}(host, configFile, successChan, failChan)
 			}
 			for i := 0; i < len(args); i++ {
 				select {
 				case res := <-successChan:
-					log.Println("success " + res)
+					log.Printf("success %v", res)
 				case err := <-failChan:
 					log.Println(err)
 				}

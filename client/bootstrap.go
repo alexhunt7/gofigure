@@ -1,12 +1,15 @@
 package client
 
 import (
+	"github.com/alexhunt7/gofigure/utils"
 	"github.com/alexhunt7/ssher"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"google.golang.org/grpc"
 	"io"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -37,18 +40,25 @@ func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error 
 	return nil
 }
 
-func Bootstrap(host, configFile string, successChan chan<- string, failChan chan<- error) {
-	conn, err := Connect(host, configFile)
-	if err != nil {
-		failChan <- err
-		return
-	}
-	defer conn.Close()
+func Bootstrap(host, configFile string) (*grpc.ClientConn, error) {
+	var grpcConn *grpc.ClientConn
 
-	sftpClient, err := sftp.NewClient(conn)
+	sshConfig, connectString, err := ssher.ClientConfig(host, configFile)
 	if err != nil {
-		failChan <- err
-		return
+		return grpcConn, err
+	}
+
+	sshConn, err := ssh.Dial("tcp", connectString, sshConfig)
+	if err != nil {
+		return grpcConn, err
+	}
+	defer sshConn.Close()
+
+	// TODO kill existing process?
+
+	sftpClient, err := sftp.NewClient(sshConn)
+	if err != nil {
+		return grpcConn, err
 	}
 	defer sftpClient.Close()
 
@@ -56,43 +66,46 @@ func Bootstrap(host, configFile string, successChan chan<- string, failChan chan
 	executable := path.Base(os.Args[0])
 	err = putfile(sftpClient, os.Args[0], executable, 0700)
 	if err != nil {
-		failChan <- err
-		return
+		return grpcConn, err
 	}
 
 	// TODO pass these in
 	for _, filename := range []string{"ca-cert.pem", "cert.pem", "key.pem"} {
 		err = putfile(sftpClient, "testdata/"+filename, filename, 0600)
 		if err != nil {
-			failChan <- err
-			return
+			return grpcConn, err
 		}
 	}
 
-	session, err := conn.NewSession()
+	session, err := sshConn.NewSession()
 	if err != nil {
-		failChan <- err
-		return
+		return grpcConn, err
 	}
 	defer session.Close()
 
 	err = session.Start("./" + executable + " serve --caFile ca-cert.pem --certFile cert.pem --keyFile key.pem")
 	if err != nil {
-		failChan <- err
-		return
+		return grpcConn, err
 	}
 
-	time.Sleep(1 * time.Second)
+	// TODO split connectString on :, replace port
+	// TODO ConnectGRPC until it doesn't return an error
+	splitConnectString := strings.Split(connectString, ":")
+	grpcConn, err = ConnectGRPC(splitConnectString[0], "testdata/ca-cert.pem", "testdata/cert.pem", "testdata/key.pem")
+	if err != nil {
+		return grpcConn, err
+	}
+	time.Sleep(time.Second)
 
-	successChan <- host
+	return grpcConn, nil
 }
 
-func Connect(host, configFile string) (*ssh.Client, error) {
-	config, connectString, err := ssher.ClientConfig(host, configFile)
+func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, error) {
+	creds, err := utils.LoadCredentials(caFile, certFile, keyFile)
 	if err != nil {
 		return nil, err
 	}
-	conn, err := ssh.Dial("tcp", connectString, config)
+	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
