@@ -7,10 +7,10 @@ import (
 	"golang.org/x/crypto/ssh"
 	"google.golang.org/grpc"
 	"io"
+	"log"
 	"os"
 	"path"
 	"strings"
-	"time"
 )
 
 func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error {
@@ -83,19 +83,17 @@ func Bootstrap(host, configFile string) (*grpc.ClientConn, error) {
 	}
 	defer session.Close()
 
-	err = session.Start("./" + executable + " serve --caFile ca-cert.pem --certFile cert.pem --keyFile key.pem")
+	err = session.Start("./" + executable + " serve --caFile ca-cert.pem --certFile cert.pem --keyFile key.pem </dev/null >/dev/null 2>&1")
 	if err != nil {
 		return grpcConn, err
 	}
 
-	// TODO split connectString on :, replace port
-	// TODO ConnectGRPC until it doesn't return an error
 	splitConnectString := strings.Split(connectString, ":")
-	grpcConn, err = ConnectGRPC(splitConnectString[0], "testdata/ca-cert.pem", "testdata/cert.pem", "testdata/key.pem")
+	// TODO handle alternative ports
+	grpcConn, err = ConnectGRPC(splitConnectString[0]+":10000", "testdata/ca-cert.pem", "testdata/cert.pem", "testdata/key.pem")
 	if err != nil {
 		return grpcConn, err
 	}
-	time.Sleep(time.Second)
 
 	return grpcConn, nil
 }
@@ -105,9 +103,13 @@ func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, e
 	if err != nil {
 		return nil, err
 	}
-	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(creds))
-	if err != nil {
-		return nil, err
+	var conn *grpc.ClientConn
+	for {
+		log.Println("trying")
+		conn, err = grpc.Dial(address, grpc.WithTransportCredentials(creds))
+		if err == nil {
+			break
+		}
 	}
 	return conn, nil
 }
