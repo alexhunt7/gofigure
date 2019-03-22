@@ -1,16 +1,19 @@
 package client
 
 import (
+	pb "github.com/alexhunt7/gofigure/proto"
 	"github.com/alexhunt7/gofigure/utils"
 	"github.com/alexhunt7/ssher"
+	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"google.golang.org/grpc"
 	"io"
-	"log"
+	"net"
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error {
@@ -40,17 +43,17 @@ func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error 
 	return nil
 }
 
-func Bootstrap(host, configFile string) (*grpc.ClientConn, error) {
-	var grpcConn *grpc.ClientConn
+func Bootstrap(host, configFile string) (*Client, error) {
+	var gofigureClient *Client
 
 	sshConfig, connectString, err := ssher.ClientConfig(host, configFile)
 	if err != nil {
-		return grpcConn, err
+		return gofigureClient, err
 	}
 
 	sshConn, err := ssh.Dial("tcp", connectString, sshConfig)
 	if err != nil {
-		return grpcConn, err
+		return gofigureClient, err
 	}
 	defer sshConn.Close()
 
@@ -58,7 +61,7 @@ func Bootstrap(host, configFile string) (*grpc.ClientConn, error) {
 
 	sftpClient, err := sftp.NewClient(sshConn)
 	if err != nil {
-		return grpcConn, err
+		return gofigureClient, err
 	}
 	defer sftpClient.Close()
 
@@ -66,36 +69,55 @@ func Bootstrap(host, configFile string) (*grpc.ClientConn, error) {
 	executable := path.Base(os.Args[0])
 	err = putfile(sftpClient, os.Args[0], executable, 0700)
 	if err != nil {
-		return grpcConn, err
+		return gofigureClient, err
 	}
 
 	// TODO pass these in
 	for _, filename := range []string{"ca-cert.pem", "cert.pem", "key.pem"} {
 		err = putfile(sftpClient, "testdata/"+filename, filename, 0600)
 		if err != nil {
-			return grpcConn, err
+			return gofigureClient, err
 		}
 	}
 
 	session, err := sshConn.NewSession()
 	if err != nil {
-		return grpcConn, err
+		return gofigureClient, err
 	}
 	defer session.Close()
 
 	err = session.Start("./" + executable + " serve --caFile ca-cert.pem --certFile cert.pem --keyFile key.pem </dev/null >/dev/null 2>&1")
 	if err != nil {
-		return grpcConn, err
+		return gofigureClient, err
 	}
 
 	splitConnectString := strings.Split(connectString, ":")
 	// TODO handle alternative ports
-	grpcConn, err = ConnectGRPC(splitConnectString[0]+":10000", "testdata/ca-cert.pem", "testdata/cert.pem", "testdata/key.pem")
-	if err != nil {
-		return grpcConn, err
+	grpcConnectString := splitConnectString[0] + ":10000"
+
+	tries := 1
+	maxTries := 30
+	//for i := 0; i < 30; i++ {
+	for {
+		c, err := net.Dial("tcp", grpcConnectString)
+		if err == nil {
+			// TODO reuse this connection instead of closing it
+			c.Close()
+			break
+		}
+		tries++
+		if tries > maxTries {
+			return gofigureClient, err
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
 
-	return grpcConn, nil
+	conn, err := ConnectGRPC(grpcConnectString, "testdata/ca-cert.pem", "testdata/cert.pem", "testdata/key.pem")
+	if err != nil {
+		return gofigureClient, err
+	}
+
+	return &Client{GofigureClient: pb.NewGofigureClient(conn)}, nil
 }
 
 func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, error) {
@@ -105,8 +127,11 @@ func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, e
 	}
 	var conn *grpc.ClientConn
 	for {
-		log.Println("trying")
-		conn, err = grpc.Dial(address, grpc.WithTransportCredentials(creds))
+		conn, err = grpc.Dial(address,
+			grpc.WithTransportCredentials(creds),
+			grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor()),
+			grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor()),
+		)
 		if err == nil {
 			break
 		}

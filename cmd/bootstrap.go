@@ -15,10 +15,15 @@
 package cmd
 
 import (
-	"github.com/alexhunt7/gofigure/client"
+	"context"
+	"fmt"
+	gclient "github.com/alexhunt7/gofigure/client"
+	pb "github.com/alexhunt7/gofigure/proto"
+	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 	"log"
+	"sync"
+	"time"
 )
 
 // bootstrapCmd represents the bootstrap command
@@ -35,27 +40,55 @@ var (
 	to quickly create a Cobra application.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Println("bootstrap called")
-			log.Println(len(args))
-			successChan, failChan := make(chan *grpc.ClientConn), make(chan error)
-			for i, host := range args {
-				log.Println(i, host)
-				go func(host, configFile string, successChan chan<- *grpc.ClientConn, failChan chan<- error) {
-					grpcConn, err := client.Bootstrap(host, configFile)
+			successChan, failChan := make(chan *gclient.Client), make(chan error)
+			for _, host := range args {
+				go func(host, configFile string, successChan chan<- *gclient.Client, failChan chan<- error) {
+					client, err := gclient.Bootstrap(host, configFile)
 					if err != nil {
 						failChan <- err
 						return
 					}
-					successChan <- grpcConn
+					successChan <- client
 				}(host, configFile, successChan, failChan)
 			}
-			for i := 0; i < len(args); i++ {
+			var clients []*gclient.Client
+			for range args {
 				select {
-				case res := <-successChan:
-					log.Printf("success %v", res)
+				case client := <-successChan:
+					clients = append(clients, client)
 				case err := <-failChan:
-					log.Println(err)
+					log.Println("got err from channel")
+					log.Fatal(err)
 				}
 			}
+			var wg sync.WaitGroup
+			for _, client := range clients {
+				client.RemoteDirectory("/home/alex/gofigure_dir")
+				wg.Add(1000)
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer cancel()
+				for i := 0; i < 1000; i++ {
+					go func(i int) {
+						defer wg.Done()
+						request := &pb.FileRequest{
+							Properties: &pb.FileProperties{
+								Path:  fmt.Sprintf("/home/alex/gofigure_dir/%d", i),
+								Owner: "alex",
+								Group: "alex",
+								Mode:  "700",
+							},
+						}
+						_, err := client.Directory(ctx, request, grpc_retry.WithMax(5))
+						// TODO retries
+						if err != nil {
+							log.Printf("failed to create dir")
+							log.Fatal(err)
+						}
+						log.Print(i)
+					}(i)
+				}
+			}
+			wg.Wait()
 		},
 	}
 	configFile string

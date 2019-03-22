@@ -109,7 +109,7 @@ func (client Client) RemoteFile(path string) {
 
 // RemoteDirectory calls Directory on the remote Minion.
 func (client Client) RemoteDirectory(path string) {
-	log.Printf("runCreateDir")
+	//log.Printf("runCreateDir")
 	request := &pb.FileRequest{
 		Properties: &pb.FileProperties{
 			Path:  path,
@@ -118,13 +118,13 @@ func (client Client) RemoteDirectory(path string) {
 			Mode:  "700",
 		},
 	}
-	log.Printf("Instantiated request")
+	//log.Printf("Instantiated request")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	log.Printf("Created context")
+	//log.Printf("Created context")
 	//response, err := client.Directory(ctx, request)
 	_, err := client.Directory(ctx, request)
-	log.Printf("ran client.Directory")
+	//log.Printf("ran client.Directory")
 	//log.Printf(response.Msg)
 	if err != nil {
 		log.Printf("failed to create dir")
