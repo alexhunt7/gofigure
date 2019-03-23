@@ -17,7 +17,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	gclient "github.com/alexhunt7/gofigure/client"
+	"github.com/alexhunt7/gofigure/master"
 	pb "github.com/alexhunt7/gofigure/proto"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/spf13/cobra"
@@ -40,27 +40,12 @@ var (
 	to quickly create a Cobra application.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Println("bootstrap called")
-			successChan, failChan := make(chan *gclient.Client), make(chan error)
-			for _, host := range args {
-				go func(host, configFile string, successChan chan<- *gclient.Client, failChan chan<- error) {
-					client, err := gclient.Bootstrap(host, configFile)
-					if err != nil {
-						failChan <- err
-						return
-					}
-					successChan <- client
-				}(host, configFile, successChan, failChan)
+
+			clients, err := master.BootstrapMany(args, configFile)
+			if err != nil {
+				log.Fatal(err)
 			}
-			var clients []*gclient.Client
-			for range args {
-				select {
-				case client := <-successChan:
-					clients = append(clients, client)
-				case err := <-failChan:
-					log.Println("got err from channel")
-					log.Fatal(err)
-				}
-			}
+
 			var wg sync.WaitGroup
 			for _, client := range clients {
 				client.RemoteDirectory("/home/alex/gofigure_dir")
@@ -79,7 +64,6 @@ var (
 							},
 						}
 						_, err := client.Directory(ctx, request, grpc_retry.WithMax(5))
-						// TODO retries
 						if err != nil {
 							log.Printf("failed to create dir")
 							log.Fatal(err)

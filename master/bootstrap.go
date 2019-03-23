@@ -1,4 +1,4 @@
-package client
+package master
 
 import (
 	pb "github.com/alexhunt7/gofigure/proto"
@@ -86,6 +86,7 @@ func Bootstrap(host, configFile string) (*Client, error) {
 	}
 	defer session.Close()
 
+	// TODO wait for this to start?
 	err = session.Start("./" + executable + " serve --caFile ca-cert.pem --certFile cert.pem --keyFile key.pem </dev/null >/dev/null 2>&1")
 	if err != nil {
 		return gofigureClient, err
@@ -137,4 +138,35 @@ func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, e
 		}
 	}
 	return conn, nil
+}
+
+func BootstrapMany(hosts []string, configFile string) (map[string]*Client, error) {
+	type result struct {
+		host   string
+		client *Client
+	}
+
+	successChan, failChan := make(chan *result), make(chan error)
+	for _, host := range hosts {
+		go func(host, configFile string, successChan chan<- *result, failChan chan<- error) {
+			client, err := Bootstrap(host, configFile)
+			if err != nil {
+				failChan <- err
+				return
+			}
+			successChan <- &result{host: host, client: client}
+		}(host, configFile, successChan, failChan)
+	}
+
+	clients := make(map[string]*Client)
+	for range hosts {
+		select {
+		case result := <-successChan:
+			clients[result.host] = result.client
+		case err := <-failChan:
+			// TODO return multiple errors?
+			return nil, err
+		}
+	}
+	return clients, nil
 }
