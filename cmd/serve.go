@@ -15,13 +15,8 @@
 package cmd
 
 import (
-	"fmt"
 	minion "github.com/alexhunt7/gofigure/minion"
-	pb "github.com/alexhunt7/gofigure/proto"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"log"
-	"net"
 )
 
 // serveCmd represents the serve command
@@ -42,26 +37,7 @@ to quick	ly create a Cobra application.`,
 )
 
 func serve(cmd *cobra.Command, args []string) {
-	fmt.Println("Serving gofigure with:")
-	fmt.Printf("  CA:   %s\n", caFile)
-	fmt.Printf("  cert: %s\n", certFile)
-	fmt.Printf("  key:  %s\n", keyFile)
-	fmt.Printf("  bind: %s\n", bind)
-	fmt.Printf("  port: %d\n", port)
-
-	creds, err := loadCredentials(caFile, certFile, keyFile)
-	if err != nil {
-		log.Fatalf("Failed to generate credentials %v", err)
-	}
-
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", bind, port))
-	if err != nil {
-		log.Fatalf("Failed to listen on port %d: %v", port, err)
-	}
-
-	grpcServer := grpc.NewServer(grpc.Creds(creds))
-	pb.RegisterGofigureServer(grpcServer, &minion.Minion{})
-	grpcServer.Serve(lis)
+	minion.Serve(caFile, certFile, keyFile, bind, port)
 }
 
 func init() {

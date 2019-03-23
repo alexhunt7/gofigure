@@ -23,5 +23,37 @@ as well as process execution.
 */
 package minion
 
+import (
+	"fmt"
+	"github.com/alexhunt7/gofigure/credentials"
+	pb "github.com/alexhunt7/gofigure/proto"
+	"google.golang.org/grpc"
+	"log"
+	"net"
+)
+
 // Minion implements the remote side of the gofigure service.
 type Minion struct{}
+
+func Serve(caFile, certFile, keyFile, bind string, port int) {
+	log.Println("Serving gofigure with:")
+	log.Printf("  CA:   %s\n", caFile)
+	log.Printf("  cert: %s\n", certFile)
+	log.Printf("  key:  %s\n", keyFile)
+	log.Printf("  bind: %s\n", bind)
+	log.Printf("  port: %d\n", port)
+
+	creds, err := credentials.Load(caFile, certFile, keyFile)
+	if err != nil {
+		log.Fatalf("Failed to generate credentials %v", err)
+	}
+
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", bind, port))
+	if err != nil {
+		log.Fatalf("Failed to listen on port %d: %v", port, err)
+	}
+
+	grpcServer := grpc.NewServer(grpc.Creds(creds))
+	pb.RegisterGofigureServer(grpcServer, &Minion{})
+	grpcServer.Serve(lis)
+}
