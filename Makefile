@@ -36,7 +36,7 @@ gofigure: proto fmt
 
 test: proto fmt
 	@go test ./... -coverprofile=coverage.out
-	@go tool cover -html=coverage.out
+	#@go tool cover -html=coverage.out
 
 bench: proto fmt
 	@go test -bench=. ./...

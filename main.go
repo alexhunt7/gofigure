@@ -14,8 +14,127 @@
 
 package main
 
-import "github.com/alexhunt7/gofigure/cmd"
+import (
+	"context"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"sync"
+	"time"
+
+	"github.com/alexhunt7/gofigure/master"
+	"github.com/alexhunt7/gofigure/minion"
+	pb "github.com/alexhunt7/gofigure/proto"
+	"github.com/ghodss/yaml"
+	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"gopkg.in/alecthomas/kingpin.v2"
+)
+
+var (
+	bootstrap = kingpin.Command("bootstrap", "Deploy minions on remote machines, and connect to them.")
+	// TODO file?
+	bootstrapConfig = bootstrap.Arg("config", "Config file.").Required().String()
+
+	dial = kingpin.Command("dial", "Connect to minions on remote machines.")
+
+	serve         = kingpin.Command("serve", "Listen for remote commands as a minion.")
+	serveCAFile   = serve.Flag("caFile", "Path to CA file.").Required().String()
+	serveCertFile = serve.Flag("certFile", "Path to certificate file.").Required().String()
+	serveKeyFile  = serve.Flag("keyFile", "Path to key file.").Required().String()
+	serveBind     = serve.Flag("bind", "Address to listen on.").Required().IP()
+	servePort     = serve.Flag("port", "Port to listen on.").Required().Int()
+)
+
+type Config struct {
+	Defaults *master.MinionConfig
+	Master   *master.Creds
+	Minions  map[string]*master.MinionConfig
+}
+
+func (c *Config) promoteDefaults() {
+	if c.Defaults.Creds == nil {
+		c.Defaults.Creds = &master.Creds{}
+	}
+	for _, minionConfig := range c.Minions {
+		if minionConfig.Bind == nil {
+			minionConfig.Bind = c.Defaults.Bind
+		}
+		if minionConfig.Port == 0 {
+			minionConfig.Port = c.Defaults.Port
+		}
+		if minionConfig.Creds == nil {
+			minionConfig.Creds = &master.Creds{}
+		}
+		if minionConfig.Creds.CAFile == "" {
+			minionConfig.Creds.CAFile = c.Defaults.Creds.CAFile
+		}
+		if minionConfig.Creds.CertFile == "" {
+			minionConfig.Creds.CertFile = c.Defaults.Creds.CertFile
+		}
+		if minionConfig.Creds.KeyFile == "" {
+			minionConfig.Creds.KeyFile = c.Defaults.Creds.KeyFile
+		}
+	}
+}
+
+func (c *Config) parse(filename string) error {
+	f, err := ioutil.ReadFile("testdata/config.yml")
+	if err != nil {
+		log.Fatalf("error reading config: %v", err)
+	}
+
+	err = yaml.Unmarshal(f, c)
+	if err != nil {
+		log.Fatalf("error unmarshalling yaml: %v", err)
+	}
+	c.promoteDefaults()
+	// TODO confirm nothing is nil
+	return nil
+}
 
 func main() {
-	cmd.Execute()
+
+	switch kingpin.Parse() {
+	case "bootstrap":
+		var config Config
+		config.parse(*bootstrapConfig)
+		clients, err := master.BootstrapMany("", os.Args[0], config.Minions, config.Master)
+		if err != nil {
+			log.Fatal(err)
+		}
+		createDirs(clients)
+	case "serve":
+		minion.Serve(*serveCAFile, *serveCertFile, *serveKeyFile, *serveBind, *servePort)
+	}
+}
+
+func createDirs(clients map[string]*master.Client) {
+	var wg sync.WaitGroup
+	for _, client := range clients {
+		client.RemoteDirectory("/home/alex/gofigure_dir")
+		wg.Add(1000)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		for i := 0; i < 1000; i++ {
+			go func(i int) {
+				defer wg.Done()
+				request := &pb.FileRequest{
+					Properties: &pb.FileProperties{
+						Path:  fmt.Sprintf("/home/alex/gofigure_dir/%d", i),
+						Owner: "alex",
+						Group: "alex",
+						Mode:  "700",
+					},
+				}
+				_, err := client.Directory(ctx, request, grpc_retry.WithMax(5))
+				if err != nil {
+					log.Printf("failed to create dir")
+					log.Fatal(err)
+				}
+				log.Print(i)
+			}(i)
+		}
+	}
+	wg.Wait()
 }

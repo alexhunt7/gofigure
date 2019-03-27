@@ -35,7 +35,7 @@ import (
 // Minion implements the remote side of the gofigure service.
 type Minion struct{}
 
-func Serve(caFile, certFile, keyFile, bind string, port int) {
+func Serve(caFile, certFile, keyFile string, bind net.IP, port int) {
 	log.Println("Serving gofigure with:")
 	log.Printf("  CA:   %s\n", caFile)
 	log.Printf("  cert: %s\n", certFile)

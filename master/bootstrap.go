@@ -1,6 +1,7 @@
 package master
 
 import (
+	"fmt"
 	pb "github.com/alexhunt7/gofigure/proto"
 	"github.com/alexhunt7/gofigure/utils"
 	"github.com/alexhunt7/ssher"
@@ -15,6 +16,18 @@ import (
 	"strings"
 	"time"
 )
+
+type Creds struct {
+	CAFile   string
+	CertFile string
+	KeyFile  string
+}
+
+type MinionConfig struct {
+	Bind  net.IP
+	Port  int
+	Creds *Creds
+}
 
 func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error {
 	r, err := os.Open(src)
@@ -43,10 +56,10 @@ func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error 
 	return nil
 }
 
-func Bootstrap(host, configFile string) (*Client, error) {
+func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfig, masterCreds *Creds) (*Client, error) {
 	var gofigureClient *Client
 
-	sshConfig, connectString, err := ssher.ClientConfig(host, configFile)
+	sshConfig, connectString, err := ssher.ClientConfig(host, sshConfigPath)
 	if err != nil {
 		return gofigureClient, err
 	}
@@ -65,16 +78,17 @@ func Bootstrap(host, configFile string) (*Client, error) {
 	}
 	defer sftpClient.Close()
 
-	// TODO pass this in?
-	executable := path.Base(os.Args[0])
-	err = putfile(sftpClient, os.Args[0], executable, 0700)
+	err = putfile(sftpClient, executable, path.Base(executable), 0700)
 	if err != nil {
 		return gofigureClient, err
 	}
 
-	// TODO pass these in
-	for _, filename := range []string{"ca-cert.pem", "cert.pem", "key.pem"} {
-		err = putfile(sftpClient, "testdata/"+filename, filename, 0600)
+	for _, filename := range []string{
+		minionConfig.Creds.CAFile,
+		minionConfig.Creds.CertFile,
+		minionConfig.Creds.KeyFile,
+	} {
+		err = putfile(sftpClient, filename, path.Base(filename), 0600)
 		if err != nil {
 			return gofigureClient, err
 		}
@@ -86,15 +100,20 @@ func Bootstrap(host, configFile string) (*Client, error) {
 	}
 	defer session.Close()
 
-	// TODO wait for this to start?
-	err = session.Start("./" + executable + " serve --caFile ca-cert.pem --certFile cert.pem --keyFile key.pem </dev/null >/dev/null 2>&1")
+	err = session.Start(fmt.Sprintf("./%s serve --bind %s --port %d --caFile %s --certFile %s --keyFile %s </dev/null &>/dev/null",
+		path.Base(executable),
+		minionConfig.Bind,
+		minionConfig.Port,
+		path.Base(minionConfig.Creds.CAFile),
+		path.Base(minionConfig.Creds.CertFile),
+		path.Base(minionConfig.Creds.KeyFile),
+	))
 	if err != nil {
 		return gofigureClient, err
 	}
 
 	splitConnectString := strings.Split(connectString, ":")
-	// TODO handle alternative ports
-	grpcConnectString := splitConnectString[0] + ":10000"
+	grpcConnectString := fmt.Sprintf("%s:%d", splitConnectString[0], minionConfig.Port)
 
 	tries := 1
 	maxTries := 30
@@ -113,7 +132,7 @@ func Bootstrap(host, configFile string) (*Client, error) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	conn, err := ConnectGRPC(grpcConnectString, "testdata/ca-cert.pem", "testdata/cert.pem", "testdata/key.pem")
+	conn, err := ConnectGRPC(grpcConnectString, masterCreds.CAFile, masterCreds.CertFile, masterCreds.KeyFile)
 	if err != nil {
 		return gofigureClient, err
 	}
@@ -140,26 +159,27 @@ func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, e
 	return conn, nil
 }
 
-func BootstrapMany(hosts []string, configFile string) (map[string]*Client, error) {
+func BootstrapMany(sshConfigPath string, executable string, minionConfigs map[string]*MinionConfig, masterCreds *Creds) (map[string]*Client, error) {
 	type result struct {
 		host   string
 		client *Client
 	}
+	gobootstrap := func(host, sshConfigPath, executable string, minionConfig *MinionConfig, masterCreds *Creds, successChan chan<- *result, failChan chan<- error) {
+		client, err := Bootstrap(host, sshConfigPath, executable, minionConfig, masterCreds)
+		if err != nil {
+			failChan <- err
+			return
+		}
+		successChan <- &result{host: host, client: client}
+	}
 
 	successChan, failChan := make(chan *result), make(chan error)
-	for _, host := range hosts {
-		go func(host, configFile string, successChan chan<- *result, failChan chan<- error) {
-			client, err := Bootstrap(host, configFile)
-			if err != nil {
-				failChan <- err
-				return
-			}
-			successChan <- &result{host: host, client: client}
-		}(host, configFile, successChan, failChan)
+	for host, minionConfig := range minionConfigs {
+		go gobootstrap(host, sshConfigPath, executable, minionConfig, masterCreds, successChan, failChan)
 	}
 
 	clients := make(map[string]*Client)
-	for range hosts {
+	for range minionConfigs {
 		select {
 		case result := <-successChan:
 			clients[result.host] = result.client

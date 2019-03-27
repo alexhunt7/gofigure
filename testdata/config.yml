@@ -1,0 +1,15 @@
+defaults:
+  bind: 127.0.0.1
+  port: 10000
+  creds:
+    caFile: testdata/ca-cert.pem
+master:
+  caFile: testdata/ca-cert.pem
+  certFile: testdata/cert.pem
+  keyFile: testdata/key.pem
+minions:
+  localhost:
+    port: 10001
+    creds:
+      certFile: testdata/cert.pem
+      keyFile: testdata/key.pem
