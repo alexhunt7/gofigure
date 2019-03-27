@@ -17,7 +17,7 @@ docs: proto fmt
 	@firefox docs/pkg/github.com/alexhunt7/gofigure/index.html
 
 proto: clean
-	@protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto
+	@protoc -I proto/ --go_out=plugins=grpc,paths=source_relative:proto proto/*.proto
 
 gofigure: proto fmt
 	@CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o gofigure
