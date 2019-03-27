@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
+	//"log"
 	"os"
 	"sync"
 	"time"
@@ -28,6 +28,7 @@ import (
 	pb "github.com/alexhunt7/gofigure/proto"
 	"github.com/ghodss/yaml"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -94,7 +95,7 @@ func (c *Config) parse(filename string) error {
 }
 
 func main() {
-
+	log.SetOutput(os.Stdout)
 	switch kingpin.Parse() {
 	case "bootstrap":
 		var config Config
@@ -132,7 +133,7 @@ func createDirs(clients map[string]*master.Client) {
 					log.Printf("failed to create dir")
 					log.Fatal(err)
 				}
-				log.Print(i)
+				log.Info(i)
 			}(i)
 		}
 	}
