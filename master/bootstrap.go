@@ -2,8 +2,8 @@ package master
 
 import (
 	"fmt"
+	"github.com/alexhunt7/gofigure/credentials"
 	pb "github.com/alexhunt7/gofigure/proto"
-	"github.com/alexhunt7/gofigure/utils"
 	"github.com/alexhunt7/ssher"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/sftp"
@@ -141,7 +141,7 @@ func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfi
 }
 
 func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, error) {
-	creds, err := utils.LoadCredentials(caFile, certFile, keyFile)
+	creds, err := credentials.Load(caFile, certFile, keyFile)
 	if err != nil {
 		return nil, err
 	}
