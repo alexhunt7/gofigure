@@ -52,7 +52,7 @@ func (s *Minion) Exec(ctx context.Context, req *pb.ExecRequest) (*pb.ExecResult,
 	}
 
 	return &pb.ExecResult{ReturnCode: int32(rc),
-			Stdout: string(stdout.Bytes()),
-			Stderr: string(stderr.Bytes())},
+			Stdout: stdout.String(),
+			Stderr: stderr.String()},
 		nil
 }

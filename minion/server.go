@@ -55,5 +55,8 @@ func Serve(caFile, certFile, keyFile string, bind net.IP, port int) {
 
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 	pb.RegisterGofigureServer(grpcServer, &Minion{})
-	grpcServer.Serve(lis)
+	err = grpcServer.Serve(lis)
+	if err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
 }

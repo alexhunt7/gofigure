@@ -10,19 +10,7 @@ fmt:
 	@go fmt ./...
 
 lint: fmt
-	@golint ./...
-
-vet: fmt
-	@go vet ./...
-
-ineffassign: fmt
-	@ineffassign .
-
-misspell: fmt
-	@misspell ./...
-
-cyclo: fmt
-	@gocyclo . minion client cmd
+	@golangci-lint run
 
 docs: proto fmt
 	@bash -c 'godoc -http=:6060 &>/dev/null & sleep 1 && wget --quiet -e robots=off -r -np -N -E -p -k http://localhost:6060/pkg/github.com/alexhunt7/gofigure/; mv "localhost:6060" docs; kill $(PERCENT)1'

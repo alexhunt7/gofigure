@@ -190,7 +190,10 @@ func (s *Minion) File(ctx context.Context, req *pb.FileRequest) (*pb.FileResult,
 		hasher.Reset()
 		// TODO handle streaming?
 		// TODO hash on the controller side?
-		hasher.Write(req.Content)
+		_, err = hasher.Write(req.Content)
+		if err != nil {
+			return nil, err
+		}
 		contentSum := hasher.Sum(nil)
 
 		if !bytes.Equal(existingSum, contentSum) {

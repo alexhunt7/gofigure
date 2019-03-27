@@ -37,7 +37,7 @@ var (
 	// TODO file?
 	bootstrapConfig = bootstrap.Arg("config", "Config file.").Required().String()
 
-	dial = kingpin.Command("dial", "Connect to minions on remote machines.")
+	//dial = kingpin.Command("dial", "Connect to minions on remote machines.")
 
 	serve         = kingpin.Command("serve", "Listen for remote commands as a minion.")
 	serveCAFile   = serve.Flag("caFile", "Path to CA file.").Required().String()
@@ -82,12 +82,16 @@ func (c *Config) promoteDefaults() {
 func (c *Config) parse(filename string) error {
 	f, err := ioutil.ReadFile("testdata/config.yml")
 	if err != nil {
-		log.Fatalf("error reading config: %v", err)
+		// TODO expand
+		//log.Fatalf("error reading config: %v", err)
+		return err
 	}
 
 	err = yaml.Unmarshal(f, c)
 	if err != nil {
-		log.Fatalf("error unmarshalling yaml: %v", err)
+		// TODO expand
+		//log.Fatalf("error unmarshalling yaml: %v", err)
+		return err
 	}
 	c.promoteDefaults()
 	// TODO confirm nothing is nil
@@ -99,7 +103,10 @@ func main() {
 	switch kingpin.Parse() {
 	case "bootstrap":
 		var config Config
-		config.parse(*bootstrapConfig)
+		err := config.parse(*bootstrapConfig)
+		if err != nil {
+			log.Fatal(err)
+		}
 		clients, err := master.BootstrapMany("", os.Args[0], config.Minions, config.Master)
 		if err != nil {
 			log.Fatal(err)
