@@ -118,12 +118,26 @@ func main() {
 }
 
 func createDirs(clients map[string]*master.Client) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	var wg sync.WaitGroup
 	for _, client := range clients {
-		client.RemoteDirectory("/home/alex/gofigure_dir")
+		request := &pb.FileRequest{
+			Properties: &pb.FileProperties{
+				Path:  "/home/alex/gofigure_dir",
+				Owner: "alex",
+				Group: "alex",
+				Mode:  "700",
+			},
+		}
+		_, err := client.Directory(ctx, request, grpc_retry.WithMax(5))
+		if err != nil {
+			log.Printf("failed to create dir")
+			log.Fatal(err)
+		}
+
 		wg.Add(1000)
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
 		for i := 0; i < 1000; i++ {
 			go func(i int) {
 				defer wg.Done()

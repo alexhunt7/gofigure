@@ -18,9 +18,6 @@ package master
 
 import (
 	pb "github.com/alexhunt7/gofigure/proto"
-	"golang.org/x/net/context"
-	"log"
-	"time"
 )
 
 // Client is a concrete example implementation of the local side of the gofigure
@@ -28,98 +25,4 @@ import (
 // It is not meant to be used directly.
 type Client struct {
 	pb.GofigureClient
-}
-
-// RemoteExec calls Exec on the remote Minion.
-func (client Client) RemoteExec(executable string, args ...string) {
-	log.Printf("runExec")
-	request := &pb.ExecRequest{
-		Executable: executable,
-		Args:       args,
-	}
-	log.Printf("Instantiated request")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	log.Printf("Created context")
-	response, err := client.Exec(ctx, request)
-	log.Printf("ran client.Exec")
-	if err != nil {
-		log.Printf("failed to exec")
-		log.Fatal(err)
-	}
-	log.Printf("stdout: %s", response.Stdout)
-	log.Printf("stderr: %s", response.Stderr)
-}
-
-// RemoteStat calls Stat on the remote Minion.
-func (client Client) RemoteStat(path string) {
-	log.Printf("runStat")
-	request := &pb.FilePath{
-		Path: path,
-	}
-	log.Printf("Instantiated request")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	log.Printf("Created context")
-	response, err := client.Stat(ctx, request)
-	log.Printf("ran client.Stat")
-	//log.Printf(response.Msg)
-	if err != nil {
-		log.Printf("failed to stat file")
-		log.Fatal(err)
-	}
-	log.Printf("owner: %s", response.Owner)
-	log.Printf("group: %s", response.Group)
-	log.Printf("mode: %s", response.Mode)
-}
-
-// RemoteFile calls File on the remote Minion.
-func (client Client) RemoteFile(path string) {
-	log.Printf("runCreateDir")
-	request := &pb.FileRequest{
-		Properties: &pb.FileProperties{
-			Path:  path,
-			Owner: "alex",
-			Group: "alex",
-			Mode:  "666",
-		},
-		Content: []byte("this is a test\n"),
-	}
-	log.Printf("Instantiated request")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	log.Printf("Created context")
-	//response, err := client.Directory(ctx, request)
-	_, err := client.File(ctx, request)
-	log.Printf("ran client.File")
-	//log.Printf(response.Msg)
-	if err != nil {
-		log.Printf("failed to create file")
-		log.Fatal(err)
-	}
-}
-
-// RemoteDirectory calls Directory on the remote Minion.
-func (client Client) RemoteDirectory(path string) {
-	//log.Printf("runCreateDir")
-	request := &pb.FileRequest{
-		Properties: &pb.FileProperties{
-			Path:  path,
-			Owner: "alex",
-			Group: "alex",
-			Mode:  "700",
-		},
-	}
-	//log.Printf("Instantiated request")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	//log.Printf("Created context")
-	//response, err := client.Directory(ctx, request)
-	_, err := client.Directory(ctx, request)
-	//log.Printf("ran client.Directory")
-	//log.Printf(response.Msg)
-	if err != nil {
-		log.Printf("failed to create dir")
-		log.Fatal(err)
-	}
 }
