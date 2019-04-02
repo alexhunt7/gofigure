@@ -4,3 +4,4 @@ gofigure
 asdf
 coverage.out
 server/testdata/dir/
+testdata/docker
