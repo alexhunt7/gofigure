@@ -115,23 +115,6 @@ func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfi
 	splitConnectString := strings.Split(connectString, ":")
 	grpcConnectString := fmt.Sprintf("%s:%d", splitConnectString[0], minionConfig.Port)
 
-	tries := 1
-	maxTries := 30
-	//for i := 0; i < 30; i++ {
-	for {
-		c, err := net.Dial("tcp", grpcConnectString)
-		if err == nil {
-			// TODO reuse this connection instead of closing it
-			c.Close()
-			break
-		}
-		tries++
-		if tries > maxTries {
-			return gofigureClient, err
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-
 	conn, err := ConnectGRPC(grpcConnectString, masterCreds.CAFile, masterCreds.CertFile, masterCreds.KeyFile)
 	if err != nil {
 		return gofigureClient, err
@@ -141,11 +124,28 @@ func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfi
 }
 
 func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, error) {
+	var conn *grpc.ClientConn
+	tries := 1
+	maxTries := 30
+	//for i := 0; i < 30; i++ {
+	for {
+		c, err := net.Dial("tcp", address)
+		if err == nil {
+			// TODO reuse this connection instead of closing it
+			c.Close()
+			break
+		}
+		tries++
+		if tries > maxTries {
+			return nil, err
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
 	creds, err := credentials.Load(caFile, certFile, keyFile)
 	if err != nil {
 		return nil, err
 	}
-	var conn *grpc.ClientConn
 	for {
 		conn, err = grpc.Dial(address,
 			grpc.WithTransportCredentials(creds),
