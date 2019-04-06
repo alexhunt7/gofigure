@@ -151,6 +151,7 @@ func createDirs(clients map[string]*master.Client) {
 					log.Fatal(err)
 				}
 				log.Info(i)
+				_, _ = client.Exit(ctx, &pb.Empty{})
 			}(i)
 		}
 	}
