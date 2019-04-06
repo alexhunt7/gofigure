@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"sync"
+	//"sync"
 	"time"
 
 	"github.com/ghodss/yaml"
@@ -111,11 +111,17 @@ func main() {
 }
 
 func createDirs(clients map[string]*master.Client) {
+	type result struct {
+		host string
+		err  error
+	}
+
+	results := make(chan *result, len(clients))
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var wg sync.WaitGroup
-	for _, client := range clients {
+	goCreateDirs := func(host string, client *master.Client) {
 		request := &pb.FileRequest{
 			Properties: &pb.FileProperties{
 				Path:  "/home/alex/gofigure_dir",
@@ -126,33 +132,42 @@ func createDirs(clients map[string]*master.Client) {
 		}
 		_, err := client.Directory(ctx, request, grpc_retry.WithMax(5))
 		if err != nil {
-			log.Printf("failed to create dir")
-			log.Fatal(err)
+			results <- &result{host: host, err: err}
+			return
 		}
 
-		wg.Add(1000)
 		for i := 0; i < 1000; i++ {
-			go func(i int) {
-				defer wg.Done()
-				request := &pb.FileRequest{
-					Properties: &pb.FileProperties{
-						Path:  fmt.Sprintf("/home/alex/gofigure_dir/%d", i),
-						Owner: "alex",
-						Group: "alex",
-						Mode:  "700",
-					},
-				}
-				_, err := client.Directory(ctx, request, grpc_retry.WithMax(5))
-				if err != nil {
-					log.Printf("failed to create dir")
-					log.Fatal(err)
-				}
-				log.Info(i)
-			}(i)
+			request := &pb.FileRequest{
+				Properties: &pb.FileProperties{
+					Path:  fmt.Sprintf("/home/alex/gofigure_dir/%d", i),
+					Owner: "alex",
+					Group: "alex",
+					Mode:  "700",
+				},
+			}
+			_, err := client.Directory(ctx, request, grpc_retry.WithMax(5))
+			if err != nil {
+				results <- &result{host: host, err: err}
+				return
+			}
 		}
+
+		results <- &result{host: host, err: nil}
 	}
-	wg.Wait()
-	for _, client := range clients {
-		_, _ = client.Exit(ctx, &pb.Empty{})
+
+	for host, client := range clients {
+		go goCreateDirs(host, client)
+	}
+
+	var res *result
+	for range clients {
+		res = <-results
+		if res.err != nil {
+			log.Errorf("failed to createDirs on host %s: %v", res.host, res.err)
+		}
+		_, err := clients[res.host].Exit(ctx, &pb.Empty{})
+		if err != nil {
+			log.Errorf("host %s failed to exit: %v", res.host, err)
+		}
 	}
 }
