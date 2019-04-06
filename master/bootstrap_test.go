@@ -50,6 +50,8 @@ func TestBootstrap(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	defer f.Close()
+
 	_, err = f.WriteString("Host docker\nUser testuser\n    Hostname 127.0.0.1\n    Port " + port + "\n    UserKnownHostsFile " + knownHosts + "\n    IdentityFile " + identity + "\n")
 	if err != nil {
 		t.Error(err)
@@ -81,7 +83,8 @@ func TestBootstrap(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to determine executable: %v", err)
 	}
-	_, err = Bootstrap("docker", sshConfigPath, executable, minionConfig, masterCreds)
+
+	_, err = BootstrapMany(sshConfigPath, executable, map[string]*MinionConfig{"docker": minionConfig}, masterCreds)
 	if err != nil {
 		t.Fatalf("failed to bootstrap: %v", err)
 	}
