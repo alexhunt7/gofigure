@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	//"log"
 	"os"
 	"sync"
 	"time"
@@ -33,11 +32,8 @@ import (
 )
 
 var (
-	bootstrap = kingpin.Command("bootstrap", "Deploy minions on remote machines, and connect to them.")
-	// TODO file?
+	bootstrap       = kingpin.Command("bootstrap", "Deploy minions on remote machines, and connect to them.")
 	bootstrapConfig = bootstrap.Arg("config", "Config file.").Required().String()
-
-	//dial = kingpin.Command("dial", "Connect to minions on remote machines.")
 
 	serve         = kingpin.Command("serve", "Listen for remote commands as a minion.")
 	serveCAFile   = serve.Flag("caFile", "Path to CA file.").Required().String()
