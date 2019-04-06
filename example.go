@@ -79,16 +79,12 @@ func (c *Config) promoteDefaults() {
 func (c *Config) parse(filename string) error {
 	f, err := ioutil.ReadFile("testdata/config.yml")
 	if err != nil {
-		// TODO expand
-		//log.Fatalf("error reading config: %v", err)
-		return err
+		return fmt.Errorf("error reading config: %v", err)
 	}
 
 	err = yaml.Unmarshal(f, c)
 	if err != nil {
-		// TODO expand
-		//log.Fatalf("error unmarshalling yaml: %v", err)
-		return err
+		return fmt.Errorf("error unmarshalling yaml: %v", err)
 	}
 	c.promoteDefaults()
 	// TODO confirm nothing is nil
