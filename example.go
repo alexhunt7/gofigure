@@ -104,24 +104,20 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		createDirs(clients)
+		err = createDirs(clients)
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "serve":
 		minion.Serve(*serveCAFile, *serveCertFile, *serveKeyFile, *serveBind, *servePort)
 	}
 }
 
-func createDirs(clients map[string]*master.Client) {
-	type result struct {
-		host string
-		err  error
-	}
-
-	results := make(chan *result, len(clients))
-
+func createDirs(clients map[string]*master.Client) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	goCreateDirs := func(host string, client *master.Client) {
+	err := master.RunAll(ctx, clients, func(client *master.Client) error {
 		request := &pb.FileRequest{
 			Properties: &pb.FileProperties{
 				Path:  "/home/alex/gofigure_dir",
@@ -131,11 +127,12 @@ func createDirs(clients map[string]*master.Client) {
 			},
 		}
 		_, err := client.Directory(ctx, request, grpc_retry.WithMax(5))
-		if err != nil {
-			results <- &result{host: host, err: err}
-			return
-		}
-
+		return err
+	})
+	if err != nil {
+		return err
+	}
+	err = master.RunAll(ctx, clients, func(client *master.Client) error {
 		for i := 0; i < 1000; i++ {
 			request := &pb.FileRequest{
 				Properties: &pb.FileProperties{
@@ -147,27 +144,10 @@ func createDirs(clients map[string]*master.Client) {
 			}
 			_, err := client.Directory(ctx, request, grpc_retry.WithMax(5))
 			if err != nil {
-				results <- &result{host: host, err: err}
-				return
+				return err
 			}
 		}
-
-		results <- &result{host: host, err: nil}
-	}
-
-	for host, client := range clients {
-		go goCreateDirs(host, client)
-	}
-
-	var res *result
-	for range clients {
-		res = <-results
-		if res.err != nil {
-			log.Errorf("failed to createDirs on host %s: %v", res.host, res.err)
-		}
-		_, err := clients[res.host].Exit(ctx, &pb.Empty{})
-		if err != nil {
-			log.Errorf("host %s failed to exit: %v", res.host, err)
-		}
-	}
+		return nil
+	})
+	return err
 }
