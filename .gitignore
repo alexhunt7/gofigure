@@ -2,6 +2,6 @@
 *.pb.go
 gofigure
 asdf
-coverage.out
+cov/
 server/testdata/dir/
 testdata/docker

@@ -5,7 +5,7 @@ PERCENT := %
 all: clean fmt lint vet ineffassign misspell cyclo proto gofigure test upx
 
 clean:
-	@rm -rf proto/*.go gofigure coverage.out docs
+	@rm -rf proto/*.go gofigure cov/* docs
 fmt:
 	@go fmt ./...
 
@@ -23,8 +23,9 @@ gofigure: proto fmt
 	@CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o gofigure
 
 test: proto fmt
-	@go test ./... -coverprofile=coverage.out
-	#@go tool cover -html=coverage.out
+	@go test -coverprofile=cov/coverage.out --coverpkg="$$(go list ./... | grep -v /proto | tr "\n" ",")" ./...
+	@go tool cover -func=cov/coverage.out
+	@go tool cover -html=cov/coverage.out -o cov/coverage.html
 
 bench: proto fmt
 	@go test -bench=. ./...
