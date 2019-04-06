@@ -151,9 +151,11 @@ func createDirs(clients map[string]*master.Client) {
 					log.Fatal(err)
 				}
 				log.Info(i)
-				_, _ = client.Exit(ctx, &pb.Empty{})
 			}(i)
 		}
 	}
 	wg.Wait()
+	for _, client := range clients {
+		_, _ = client.Exit(ctx, &pb.Empty{})
+	}
 }
