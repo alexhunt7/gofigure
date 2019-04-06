@@ -22,12 +22,15 @@ import "exec.proto";
 
 package gofigure;
 
+message Empty {}
+
 service Gofigure {
   rpc Directory (FileRequest) returns (DirectoryResult) {}
   rpc File (FileRequest) returns (FileResult) {}
   rpc Delete (DeleteRequest) returns (DeleteResult) {}
   rpc Stat (FilePath) returns (StatResult) {}
   rpc Exec (ExecRequest) returns (ExecResult) {}
+  rpc Exit (Empty) returns (Empty) {}
   //rpc Symlink (FileRequest) returns (SymlinkResult) {}
   //rpc Hardlink (FileRequest) returns (HardlinkResult) {}
 }

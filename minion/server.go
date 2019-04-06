@@ -24,6 +24,7 @@ as well as process execution.
 package minion
 
 import (
+	"context"
 	"fmt"
 	"github.com/alexhunt7/gofigure/credentials"
 	pb "github.com/alexhunt7/gofigure/proto"
@@ -33,7 +34,14 @@ import (
 )
 
 // Minion implements the remote side of the gofigure service.
-type Minion struct{}
+type Minion struct {
+	grpcServer *grpc.Server
+}
+
+func (s *Minion) Exit(ctx context.Context, req *pb.Empty) (*pb.Empty, error) {
+	go s.grpcServer.GracefulStop()
+	return &pb.Empty{}, nil
+}
 
 func Serve(caFile, certFile, keyFile string, bind net.IP, port int) {
 	log.Println("Serving gofigure with:")
@@ -54,7 +62,7 @@ func Serve(caFile, certFile, keyFile string, bind net.IP, port int) {
 	}
 
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
-	pb.RegisterGofigureServer(grpcServer, &Minion{})
+	pb.RegisterGofigureServer(grpcServer, &Minion{grpcServer: grpcServer})
 	err = grpcServer.Serve(lis)
 	if err != nil {
 		log.Fatalf("Failed to serve: %v", err)

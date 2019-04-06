@@ -10,6 +10,7 @@ require (
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/pkg/sftp v1.10.0
 	github.com/sirupsen/logrus v1.4.0
+	github.com/stretchr/testify v1.2.2
 	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
 	golang.org/x/net v0.0.0-20190327025741-74e053c68e29
 	google.golang.org/grpc v1.19.1
