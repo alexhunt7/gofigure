@@ -18,10 +18,9 @@ package minion
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"errors"
-	pb "github.com/alexhunt7/gofigure/proto"
-	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
 	"os"
@@ -29,6 +28,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"syscall"
+
+	pb "github.com/alexhunt7/gofigure/proto"
 )
 
 // TODO add tests for invalid modes

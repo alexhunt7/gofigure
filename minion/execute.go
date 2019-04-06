@@ -18,10 +18,11 @@ package minion
 
 import (
 	"bytes"
-	pb "github.com/alexhunt7/gofigure/proto"
-	"golang.org/x/net/context"
+	"context"
 	"os/exec"
 	"syscall"
+
+	pb "github.com/alexhunt7/gofigure/proto"
 )
 
 // Exec executes a command specified in an ExecRequest

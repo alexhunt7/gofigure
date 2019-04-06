@@ -1,13 +1,14 @@
 package minion
 
 import (
-	pb "github.com/alexhunt7/gofigure/proto"
-	"golang.org/x/net/context"
+	"context"
 	"os"
 	"os/user"
 	"strconv"
 	"testing"
 	"time"
+
+	pb "github.com/alexhunt7/gofigure/proto"
 )
 
 func TestParseFileMode(t *testing.T) {

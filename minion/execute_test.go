@@ -1,9 +1,10 @@
 package minion
 
 import (
-	pb "github.com/alexhunt7/gofigure/proto"
-	"golang.org/x/net/context"
+	"context"
 	"testing"
+
+	pb "github.com/alexhunt7/gofigure/proto"
 )
 
 //https://stackoverflow.com/questions/42102496/testing-a-grpc-service
