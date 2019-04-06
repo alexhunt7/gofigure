@@ -22,13 +22,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alexhunt7/gofigure/master"
-	"github.com/alexhunt7/gofigure/minion"
-	pb "github.com/alexhunt7/gofigure/proto"
 	"github.com/ghodss/yaml"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
+
+	"github.com/alexhunt7/gofigure/master"
+	"github.com/alexhunt7/gofigure/minion"
+	pb "github.com/alexhunt7/gofigure/proto"
 )
 
 var (

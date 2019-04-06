@@ -18,8 +18,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"google.golang.org/grpc/credentials"
 	"io/ioutil"
+
+	"google.golang.org/grpc/credentials"
 )
 
 func Load(caFile string, certFile string, keyFile string) (credentials.TransportCredentials, error) {

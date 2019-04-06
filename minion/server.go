@@ -26,11 +26,13 @@ package minion
 import (
 	"context"
 	"fmt"
-	"github.com/alexhunt7/gofigure/credentials"
-	pb "github.com/alexhunt7/gofigure/proto"
-	"google.golang.org/grpc"
 	"log"
 	"net"
+
+	"google.golang.org/grpc"
+
+	"github.com/alexhunt7/gofigure/credentials"
+	pb "github.com/alexhunt7/gofigure/proto"
 )
 
 // Minion implements the remote side of the gofigure service.

@@ -2,19 +2,21 @@ package master
 
 import (
 	"fmt"
-	"github.com/alexhunt7/gofigure/credentials"
-	pb "github.com/alexhunt7/gofigure/proto"
-	"github.com/alexhunt7/ssher"
-	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
-	"google.golang.org/grpc"
 	"io"
 	"net"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"google.golang.org/grpc"
+
+	"github.com/alexhunt7/gofigure/credentials"
+	pb "github.com/alexhunt7/gofigure/proto"
+	"github.com/alexhunt7/ssher"
 )
 
 type Creds struct {

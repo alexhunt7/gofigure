@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	//"github.com/alexhunt7/gofigure/credentials"
+	"github.com/stretchr/testify/require"
+
 	"github.com/alexhunt7/gofigure/master"
 	pb "github.com/alexhunt7/gofigure/proto"
-	"github.com/stretchr/testify/require"
 )
 
 func TestServe(t *testing.T) {
