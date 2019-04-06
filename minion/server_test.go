@@ -22,13 +22,6 @@ func TestServe(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	//creds, err := credentials.Load(caFile, certFile, keyFile)
-	//if err != nil {
-	//	t.Fatalf("failed to load credentials: %v", err)
-	//}
-
-	//var conn *grpc.ClientConn
-	//for {
 	conn, err := master.ConnectGRPC("127.0.0.1:10001", caFile, certFile, keyFile)
 	require.Nil(err)
 
