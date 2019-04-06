@@ -23,7 +23,7 @@ gofigure: proto fmt
 	@CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o gofigure
 
 test: proto fmt
-	@go test -coverprofile=cov/coverage.out --coverpkg="$$(go list ./... | grep -v /proto | paste -sd, -)" ./...
+	@go test -coverprofile=cov/coverage.out --coverpkg="$$(go list ./... | grep -v -e /proto -e 'gofigure$$' | paste -sd, -)" ./...
 	@go tool cover -func=cov/coverage.out
 	@go tool cover -html=cov/coverage.out -o cov/coverage.html
 
