@@ -108,6 +108,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		err = exit(clients)
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "serve":
 		minion.Serve(*serveCAFile, *serveCertFile, *serveKeyFile, *serveBind, *servePort)
 	}
@@ -132,7 +136,7 @@ func createDirs(clients map[string]*master.Client) error {
 	if err != nil {
 		return err
 	}
-	err = master.RunAll(ctx, clients, func(client *master.Client) error {
+	return master.RunAll(ctx, clients, func(client *master.Client) error {
 		for i := 0; i < 1000; i++ {
 			request := &pb.FileRequest{
 				Properties: &pb.FileProperties{
@@ -149,5 +153,14 @@ func createDirs(clients map[string]*master.Client) error {
 		}
 		return nil
 	})
-	return err
+}
+
+func exit(clients map[string]*master.Client) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	return master.RunAll(ctx, clients, func(client *master.Client) error {
+		_, err := client.Exit(ctx, &pb.Empty{}, grpc_retry.WithMax(5))
+		return err
+	})
 }
