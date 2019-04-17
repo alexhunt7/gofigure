@@ -40,11 +40,14 @@ type Minion struct {
 	grpcServer *grpc.Server
 }
 
+// Exit gracefully stops the grpc server.
+// It does not wait for shutdown to complete before returning.
 func (s *Minion) Exit(ctx context.Context, req *pb.Empty) (*pb.Empty, error) {
 	go s.grpcServer.GracefulStop()
 	return &pb.Empty{}, nil
 }
 
+// Serve listens for incoming client connections.
 func Serve(caFile, certFile, keyFile string, bind net.IP, port int) {
 	log.Println("Serving gofigure with:")
 	log.Printf("  CA:   %s\n", caFile)

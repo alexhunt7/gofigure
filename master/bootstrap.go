@@ -58,6 +58,8 @@ func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error 
 	return nil
 }
 
+// Bootstrap will parse an openssh config file, ssh to the remote host, copy the executable there,
+// run it, and attempt to connect, returning a gofigure client.
 func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfig, masterCreds *Creds) (*Client, error) {
 	var gofigureClient *Client
 
@@ -125,6 +127,8 @@ func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfi
 	return &Client{GofigureClient: pb.NewGofigureClient(conn)}, nil
 }
 
+// ConnectGRPC attempts to connect over GRPC to the remote address.
+// It returns only a GRPC connection, not a gofigure client.
 func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, error) {
 	var conn *grpc.ClientConn
 	tries := 1
@@ -161,6 +165,7 @@ func ConnectGRPC(address, caFile, certFile, keyFile string) (*grpc.ClientConn, e
 	return conn, nil
 }
 
+// BootstrapMany calls Bootstrap for many hosts in parallel.
 func BootstrapMany(sshConfigPath string, executable string, minionConfigs map[string]*MinionConfig, masterCreds *Creds) (map[string]*Client, error) {
 	type result struct {
 		host   string

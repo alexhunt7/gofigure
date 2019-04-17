@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package master is the gofigure reference client library with helper functions.
 package master
 
 import (
@@ -22,7 +23,6 @@ import (
 
 // Client is a concrete example implementation of the local side of the gofigure
 // configuration management tool.
-// It is not meant to be used directly.
 type Client struct {
 	pb.GofigureClient
 }

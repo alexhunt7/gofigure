@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+// RunAll is a helper function for running a function on many clients in parallel.
 func RunAll(ctx context.Context, clients map[string]*Client, f func(client *Client) error) error {
 	type result struct {
 		host string
