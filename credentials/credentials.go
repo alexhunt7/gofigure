@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package credentials is a helper for loading x509 certificate files into GRPC transport credentials.
 package credentials
 
 import (
@@ -23,6 +24,7 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// Load reads x509 certificate files into GRPC transport credentials.
 func Load(caFile string, certFile string, keyFile string) (credentials.TransportCredentials, error) {
 	// https://github.com/grpc/grpc-go/issues/403
 
