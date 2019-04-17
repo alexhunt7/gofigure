@@ -59,9 +59,9 @@ func TestParseFileProperties(t *testing.T) {
 	tests := []struct {
 		fileRequest  *pb.FileRequest
 		expectedPath string
-		expectedMode os.FileMode
 		expectedUID  int
 		expectedGID  int
+		expectedMode os.FileMode
 		shouldErr    bool
 	}{
 		// TODO find a way to test this stuff cross environment. Mock? Docker?
