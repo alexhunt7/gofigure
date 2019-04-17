@@ -1,8 +1,8 @@
 PERCENT := %
 
-.PHONY: all clean fmt lint vet ineffassign misspell cyclo proto test bench upx
+.PHONY: all clean fmt lint proto test bench upx
 
-all: clean fmt lint vet ineffassign misspell cyclo proto gofigure test upx
+all: clean fmt lint proto gofigure test upx
 
 clean:
 	@rm -rf proto/*.go gofigure cov/* docs

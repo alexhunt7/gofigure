@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	//"sync"
 	"time"
 
 	"github.com/ghodss/yaml"
@@ -77,7 +76,7 @@ func (c *Config) promoteDefaults() {
 }
 
 func (c *Config) parse(filename string) error {
-	f, err := ioutil.ReadFile("testdata/config.yml")
+	f, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("error reading config: %v", err)
 	}

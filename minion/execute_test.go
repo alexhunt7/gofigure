@@ -64,10 +64,8 @@ func TestExec(t *testing.T) {
 				t.Errorf("TestExec did not error as expected")
 			}
 			continue
-		} else {
-			if err != nil {
-				t.Errorf("TestExec got unexpected error: %v", err)
-			}
+		} else if err != nil {
+			t.Errorf("TestExec got unexpected error: %v", err)
 		}
 		if resp.ReturnCode != tt.expectedReturnCode {
 			t.Errorf("TestExec return code, %v != %v", tt.expectedReturnCode, resp.ReturnCode)

@@ -167,10 +167,8 @@ func TestParseFileProperties(t *testing.T) {
 				t.Errorf("TestParseFileProperties did not error as expected")
 			}
 			continue
-		} else {
-			if err != nil {
-				t.Errorf("TestParseFileProperties got unexpected error: %v", err)
-			}
+		} else if err != nil {
+			t.Errorf("TestParseFileProperties got unexpected error: %v", err)
 		}
 		if path != tt.expectedPath {
 			t.Errorf("TestParseFileProperties path, %v != %v", path, tt.expectedPath)
