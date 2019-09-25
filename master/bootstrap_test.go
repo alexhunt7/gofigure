@@ -52,7 +52,7 @@ func TestBootstrap(t *testing.T) {
 	}
 	defer f.Close()
 
-	_, err = f.WriteString("Host docker\nUser testuser\n    Hostname 127.0.0.1\n    Port " + port + "\n    UserKnownHostsFile " + knownHosts + "\n    IdentityFile " + identity + "\n")
+	_, err = f.WriteString("Host docker\n    User testuser\n    Hostname 127.0.0.1\n    Port " + port + "\n    UserKnownHostsFile " + knownHosts + "\n    IdentityFile " + identity + "\n")
 	if err != nil {
 		t.Error(err)
 		return

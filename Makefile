@@ -6,7 +6,8 @@ all: clean fmt lint proto gofigure test upx
 
 clean:
 	@rm -rf proto/*.go gofigure cov/* docs
-fmt:
+
+fmt: proto
 	@go fmt ./...
 
 lint: fmt
@@ -22,7 +23,10 @@ proto: clean
 gofigure: proto fmt
 	@CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o gofigure
 
-test: proto fmt
+docker-sshd:
+	cd testdata && docker build -t gofigure-sshd .
+
+test: proto fmt docker-sshd
 	@go test -coverprofile=cov/coverage.out --coverpkg="$$(go list ./... | grep -v /proto | paste -sd, -)" ./...
 	@go tool cover -func=cov/coverage.out
 	@go tool cover -html=cov/coverage.out -o cov/coverage.html

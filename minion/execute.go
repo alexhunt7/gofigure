@@ -37,7 +37,7 @@ func (s *Minion) Exec(ctx context.Context, req *pb.ExecRequest) (*pb.ExecResult,
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	rc := 255
+	var rc int
 	if err := cmd.Run(); err != nil {
 		if exiterr, ok := err.(*exec.ExitError); ok {
 			// rc != 0
