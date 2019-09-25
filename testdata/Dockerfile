@@ -7,7 +7,7 @@ RUN addgroup testuser && \
     mkdir /home/testuser/.ssh
 COPY ./ssh_host_rsa_key /etc/ssh/ssh_host_rsa_key
 COPY ./ssh_host_rsa_key.pub /home/testuser/.ssh/authorized_keys
-RUN chmod 700 -R /home/testuser/.ssh && \
+RUN chmod u+rwX,go-rwx -R /home/testuser/.ssh /etc/ssh/ssh_host_rsa_key && \
     chown -R testuser:testuser /home/testuser/.ssh
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
