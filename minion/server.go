@@ -35,16 +35,32 @@ import (
 	pb "github.com/alexhunt7/gofigure/proto"
 )
 
-// Minion implements the remote side of the gofigure service.
-type Minion struct {
-	grpcServer *grpc.Server
-}
-
 // Exit gracefully stops the grpc server.
 // It does not wait for shutdown to complete before returning.
 func (s *Minion) Exit(ctx context.Context, req *pb.Empty) (*pb.Empty, error) {
 	go s.grpcServer.GracefulStop()
 	return &pb.Empty{}, nil
+}
+
+func (minion *Minion) StartServer() {
+	log.Println("Serving gofigure with:")
+	log.Printf("  CA:   %s\n", minion.Metadata.CaFile)
+	log.Printf("  cert: %s\n", minion.Metadata.CertFile)
+	log.Printf("  key:  %s\n", minion.Metadata.KeyFile)
+	log.Printf("  bind: %s\n", minion.Metadata.Bind)
+	log.Printf("  port: %d\n", minion.Metadata.Port)
+
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", minion.Metadata.Bind, minion.Metadata.Port))
+
+	if err != nil {
+		log.Fatalf("Failed to listen on port %d: %v", minion.Metadata.Port, err)
+	}
+
+	pb.RegisterGofigureServer(minion.grpcServer, minion)
+	err = minion.grpcServer.Serve(lis)
+	if err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
 }
 
 // Serve listens for incoming client connections.

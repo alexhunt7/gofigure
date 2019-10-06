@@ -112,7 +112,21 @@ func main() {
 			log.Fatal(err)
 		}
 	case "serve":
-		minion.Serve(*serveCAFile, *serveCertFile, *serveKeyFile, *serveBind, *servePort)
+
+		client, err := minion.ConstructMinion(nil,
+			nil,
+			minion.CreateGrpcServer(*serveCAFile, *serveCertFile, *serveKeyFile),
+			minion.SetBind(*serveBind),
+			minion.SetPort(*servePort),
+		)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		client.StartServer()
+
+		// minion.Serve(*serveCAFile, *serveCertFile, *serveKeyFile, *serveBind, *servePort)
 	}
 }
 
