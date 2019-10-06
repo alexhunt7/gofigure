@@ -37,3 +37,21 @@ if err != nil {
 }
 return &master.Client{GofigureClient: pb.NewGofigureClient(conn)}, nil
 ```
+
+
+### Creating your certificates locally
+
+```bash
+mkdir myCerts
+cd myCerts
+openssl genrsa -des3 -out rootCA.key 4096
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt
+openssl genrsa -out mydomain.com.key 2048
+openssl req -new -sha256 -key mydomain.com.key -subj "/C=US/ST=CA/O=MyOrg, Inc./CN=mydomain.com" -out mydomain.com.csr 
+openssl x509 -req -in mydomain.com.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out mydomain.com.crt -days 500 -sha256
+```
+
+Then you can create your server
+```bash
+./gofigure serve --caFile myCerts/rootCA.crt --certFile=myCerts/mydomain.com.crt --keyFile=myCerts/mydomain.com.key --bind=0.0.0.0 --port=8000
+```
