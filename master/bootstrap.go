@@ -1,18 +1,22 @@
 package master
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"path"
 	"strings"
 	"time"
 
+	"github.com/ghodss/yaml"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"google.golang.org/grpc"
+	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/alexhunt7/gofigure/credentials"
 	pb "github.com/alexhunt7/gofigure/proto"
@@ -29,6 +33,53 @@ type MinionConfig struct {
 	Bind  net.IP
 	Port  int
 	Creds *Creds
+}
+
+type Config struct {
+	Defaults *MinionConfig
+	Master   *Creds
+	Minions  map[string]*MinionConfig
+}
+
+func (c *Config) promoteDefaults() {
+	if c.Defaults.Creds == nil {
+		c.Defaults.Creds = &Creds{}
+	}
+	for _, minionConfig := range c.Minions {
+		if minionConfig.Bind == nil {
+			minionConfig.Bind = c.Defaults.Bind
+		}
+		if minionConfig.Port == 0 {
+			minionConfig.Port = c.Defaults.Port
+		}
+		if minionConfig.Creds == nil {
+			minionConfig.Creds = &Creds{}
+		}
+		if minionConfig.Creds.CAFile == "" {
+			minionConfig.Creds.CAFile = c.Defaults.Creds.CAFile
+		}
+		if minionConfig.Creds.CertFile == "" {
+			minionConfig.Creds.CertFile = c.Defaults.Creds.CertFile
+		}
+		if minionConfig.Creds.KeyFile == "" {
+			minionConfig.Creds.KeyFile = c.Defaults.Creds.KeyFile
+		}
+	}
+}
+
+func (c *Config) parse(filename string) error {
+	f, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return fmt.Errorf("error reading config: %v", err)
+	}
+
+	err = yaml.Unmarshal(f, c)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling yaml: %v", err)
+	}
+	c.promoteDefaults()
+	// TODO confirm nothing is nil
+	return nil
 }
 
 func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error {
@@ -68,6 +119,7 @@ func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfi
 		return gofigureClient, err
 	}
 
+	// TODO retry/sleep
 	sshConn, err := ssh.Dial("tcp", connectString, sshConfig)
 	if err != nil {
 		return gofigureClient, err
@@ -196,4 +248,38 @@ func BootstrapMany(sshConfigPath string, executable string, minionConfigs map[st
 		}
 	}
 	return clients, nil
+}
+
+func BootstrapCmd() (map[string]*Client, error) {
+	clients := make(map[string]*Client)
+
+	app := kingpin.New("name", "help")
+	bootstrapConfig := app.Arg("config", "Config file.").Required().String()
+	minionPath := app.Arg("minion", "Path to minion binary").Required().String()
+	_, err := app.Parse(os.Args[1:])
+	if err != nil {
+		return clients, err
+	}
+
+	var config Config
+	err = config.parse(*bootstrapConfig)
+	if err != nil {
+		return clients, err
+	}
+
+	clients, err = BootstrapMany("", *minionPath, config.Minions, config.Master)
+	if err != nil {
+		return clients, err
+	}
+	return clients, nil
+}
+
+func Exit(clients map[string]*Client) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	return RunAll(ctx, clients, func(client *Client) error {
+		_, err := client.Exit(ctx, &pb.Empty{}, grpc_retry.WithMax(5))
+		return err
+	})
 }

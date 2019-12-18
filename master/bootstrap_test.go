@@ -84,6 +84,8 @@ func TestBootstrap(t *testing.T) {
 		t.Fatalf("failed to determine executable: %v", err)
 	}
 
+	// TODO properly handle retries in bootstrap.go
+	time.Sleep(time.Millisecond * 100)
 	_, err = BootstrapMany(sshConfigPath, executable, map[string]*MinionConfig{"docker": minionConfig}, masterCreds)
 	if err != nil {
 		t.Fatalf("failed to bootstrap: %v", err)

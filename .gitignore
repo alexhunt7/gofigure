@@ -1,6 +1,7 @@
 *.swp
 *.pb.go
-gofigure
+example-master
+gofigure-minion
 asdf
 cov/
 server/testdata/dir/

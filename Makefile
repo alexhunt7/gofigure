@@ -2,10 +2,10 @@ PERCENT := %
 
 .PHONY: all clean fmt lint proto test bench upx
 
-all: clean fmt lint proto gofigure test upx
+all: clean fmt lint proto gofigure-minion example-master test upx
 
 clean:
-	@rm -rf proto/*.go gofigure cov/* docs
+	@rm -rf proto/*.go gofigure-minion example-master cov/* docs
 
 fmt: proto
 	@go fmt ./...
@@ -13,17 +13,17 @@ fmt: proto
 lint: fmt
 	@golangci-lint run
 
-docs: proto fmt
-	@bash -c 'godoc -http=:6060 &>/dev/null & sleep 1 && wget --quiet -e robots=off -r -np -N -E -p -k http://localhost:6060/pkg/github.com/alexhunt7/gofigure/; mv "localhost:6060" docs; kill $(PERCENT)1'
-	@firefox docs/pkg/github.com/alexhunt7/gofigure/index.html
-
 proto: clean
 	@protoc -I proto/ --go_out=plugins=grpc,paths=source_relative:proto proto/*.proto
 
-gofigure: proto fmt
-	@CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o gofigure
+gofigure-minion: proto fmt
+	@CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o gofigure-minion ./cmd/minion
+
+example-master: proto fmt
+	@CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o example-master ./cmd/example
 
 docker-sshd:
+	@chmod 600 testdata/ssh_host_rsa_key*
 	cd testdata && docker build -t gofigure-sshd .
 
 test: proto fmt docker-sshd
@@ -34,5 +34,5 @@ test: proto fmt docker-sshd
 bench: proto fmt
 	@go test -bench=. ./...
 
-upx: gofigure
-	@upx -qq gofigure
+upx: gofigure-minion
+	@upx -qq gofigure-minion
