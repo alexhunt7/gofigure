@@ -3,24 +3,20 @@ package master
 import (
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
 	"os"
+	"os/exec"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/ghodss/yaml"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
 	"google.golang.org/grpc"
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/alexhunt7/gofigure/credentials"
 	pb "github.com/alexhunt7/gofigure/proto"
-	"github.com/alexhunt7/ssher"
 )
 
 type Creds struct {
@@ -82,94 +78,29 @@ func (c *Config) parse(filename string) error {
 	return nil
 }
 
-func putfile(sftpClient *sftp.Client, src, dst string, perms os.FileMode) error {
-	r, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
-	w, err := sftpClient.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer w.Close()
-
-	err = sftpClient.Chmod(dst, perms)
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(w, r)
-	if err != nil {
-		return err
-	}
-
-	// TODO fsync?
-	return nil
-}
-
 // Bootstrap will parse an openssh config file, ssh to the remote host, copy the executable there,
 // run it, and attempt to connect, returning a gofigure client.
 func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfig, masterCreds *Creds) (*Client, error) {
 	var gofigureClient *Client
 
-	sshConfig, connectString, err := ssher.ClientConfig(host, sshConfigPath)
-	if err != nil {
-		return gofigureClient, err
-	}
-
-	// TODO retry/sleep
-	sshConn, err := ssh.Dial("tcp", connectString, sshConfig)
-	if err != nil {
-		return gofigureClient, err
-	}
-	defer sshConn.Close()
-
-	// TODO kill existing process?
-
-	sftpClient, err := sftp.NewClient(sshConn)
-	if err != nil {
-		return gofigureClient, err
-	}
-	defer sftpClient.Close()
-
-	err = putfile(sftpClient, executable, path.Base(executable), 0700)
-	if err != nil {
-		return gofigureClient, err
-	}
-
-	for _, filename := range []string{
+	err := exec.Command("scp",
+		"-F", sshConfigPath,
+		executable,
 		minionConfig.Creds.CAFile,
 		minionConfig.Creds.CertFile,
 		minionConfig.Creds.KeyFile,
-	} {
-		err = putfile(sftpClient, filename, path.Base(filename), 0600)
-		if err != nil {
-			return gofigureClient, err
-		}
-	}
-
-	session, err := sshConn.NewSession()
+		fmt.Sprintf("%s:", host)).Run()
 	if err != nil {
-		return gofigureClient, err
+		return gofigureClient, fmt.Errorf("failed to scp minion executable and certificate files: %v", err)
 	}
-	defer session.Close()
 
-	err = session.Start(fmt.Sprintf("./%s serve --bind %s --port %d --caFile %s --certFile %s --keyFile %s </dev/null &>/dev/null",
-		path.Base(executable),
-		minionConfig.Bind,
-		minionConfig.Port,
-		path.Base(minionConfig.Creds.CAFile),
-		path.Base(minionConfig.Creds.CertFile),
-		path.Base(minionConfig.Creds.KeyFile),
-	))
+	remoteExec := fmt.Sprintf("./%s", path.Base(executable))
+	err = exec.Command("ssh", "-F", sshConfigPath, host, fmt.Sprintf("%s --bind %s --port %d --caFile %s --certFile %s --keyFile %s", remoteExec, minionConfig.Bind.String(), minionConfig.Port, path.Base(minionConfig.Creds.CAFile), path.Base(minionConfig.Creds.CertFile), path.Base(minionConfig.Creds.KeyFile))).Start()
 	if err != nil {
-		return gofigureClient, err
+		return gofigureClient, fmt.Errorf("failed to execute %s on remote host %s: %v", remoteExec, host, err)
 	}
 
-	splitConnectString := strings.Split(connectString, ":")
-	grpcConnectString := fmt.Sprintf("%s:%d", splitConnectString[0], minionConfig.Port)
+	grpcConnectString := fmt.Sprintf("%s:%d", host, minionConfig.Port)
 
 	conn, err := ConnectGRPC(grpcConnectString, masterCreds.CAFile, masterCreds.CertFile, masterCreds.KeyFile)
 	if err != nil {

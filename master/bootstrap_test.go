@@ -32,6 +32,7 @@ func TestBootstrap(t *testing.T) {
 		return
 	}
 	containerID := strings.TrimSpace(string(containerIDBytes))
+	//_ = strings.TrimSpace(string(containerIDBytes))
 
 	hasConnected := false
 	cleanup := func() {
@@ -52,7 +53,7 @@ func TestBootstrap(t *testing.T) {
 	}
 	defer f.Close()
 
-	_, err = f.WriteString("Host docker\n    User testuser\n    Hostname 127.0.0.1\n    Port " + port + "\n    UserKnownHostsFile " + knownHosts + "\n    IdentityFile " + identity + "\n")
+	_, err = f.WriteString("Host 127.0.0.1 docker\n    User testuser\n    Hostname 127.0.0.1\n    Port " + port + "\n    UserKnownHostsFile " + knownHosts + "\n    IdentityFile " + identity + "\n")
 	if err != nil {
 		t.Error(err)
 		return
@@ -79,14 +80,9 @@ func TestBootstrap(t *testing.T) {
 		KeyFile:  fmt.Sprintf("%s/%s", testdataDir, "key.pem"),
 	}
 
-	executable, err := os.Executable()
-	if err != nil {
-		t.Fatalf("failed to determine executable: %v", err)
-	}
-
 	// TODO properly handle retries in bootstrap.go
 	time.Sleep(time.Millisecond * 100)
-	_, err = BootstrapMany(sshConfigPath, executable, map[string]*MinionConfig{"docker": minionConfig}, masterCreds)
+	_, err = BootstrapMany(sshConfigPath, "../gofigure-minion", map[string]*MinionConfig{"127.0.0.1": minionConfig}, masterCreds)
 	if err != nil {
 		t.Fatalf("failed to bootstrap: %v", err)
 	}

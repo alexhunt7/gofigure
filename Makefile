@@ -26,7 +26,7 @@ docker-sshd:
 	@chmod 600 testdata/ssh_host_rsa_key*
 	cd testdata && docker build -t gofigure-sshd .
 
-test: proto fmt docker-sshd
+test: proto fmt docker-sshd gofigure-minion
 	@go test -coverprofile=cov/coverage.out --coverpkg="$$(go list ./... | grep -v /proto | paste -sd, -)" ./...
 	@go tool cover -func=cov/coverage.out
 	@go tool cover -html=cov/coverage.out -o cov/coverage.html
