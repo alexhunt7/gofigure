@@ -12,11 +12,16 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/alexhunt7/gofigure/credentials"
 	pb "github.com/alexhunt7/gofigure/proto"
+)
+
+var (
+	Debug = false
 )
 
 type Creds struct {
@@ -81,21 +86,49 @@ func (c *Config) parse(filename string) error {
 // Bootstrap will parse an openssh config file, ssh to the remote host, copy the executable there,
 // run it, and attempt to connect, returning a gofigure client.
 func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfig, masterCreds *Creds) (*Client, error) {
+	// TODO remove existing servers
 	var gofigureClient *Client
-
-	err := exec.Command("scp",
-		"-F", sshConfigPath,
+	args := []string{
 		executable,
 		minionConfig.Creds.CAFile,
 		minionConfig.Creds.CertFile,
 		minionConfig.Creds.KeyFile,
-		fmt.Sprintf("%s:", host)).Run()
+		fmt.Sprintf("%s:", host),
+	}
+	if sshConfigPath != "" {
+		args = append([]string{"-F", sshConfigPath}, args...)
+	}
+
+	cmd := exec.Command("scp", args...)
+	if Debug {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	err := cmd.Run()
 	if err != nil {
 		return gofigureClient, fmt.Errorf("failed to scp minion executable and certificate files: %v", err)
 	}
 
 	remoteExec := fmt.Sprintf("./%s", path.Base(executable))
-	err = exec.Command("ssh", "-F", sshConfigPath, host, fmt.Sprintf("%s --bind %s --port %d --caFile %s --certFile %s --keyFile %s", remoteExec, minionConfig.Bind.String(), minionConfig.Port, path.Base(minionConfig.Creds.CAFile), path.Base(minionConfig.Creds.CertFile), path.Base(minionConfig.Creds.KeyFile))).Start()
+	args = []string{
+		host,
+		fmt.Sprintf("%s --bind %s --port %d --caFile %s --certFile %s --keyFile %s",
+			remoteExec,
+			minionConfig.Bind.String(),
+			minionConfig.Port,
+			path.Base(minionConfig.Creds.CAFile),
+			path.Base(minionConfig.Creds.CertFile),
+			path.Base(minionConfig.Creds.KeyFile)),
+	}
+	if sshConfigPath != "" {
+		args = append([]string{"-F", sshConfigPath}, args...)
+	}
+	cmd = exec.Command("ssh", args...)
+	if Debug {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	err = cmd.Start()
 	if err != nil {
 		return gofigureClient, fmt.Errorf("failed to execute %s on remote host %s: %v", remoteExec, host, err)
 	}
