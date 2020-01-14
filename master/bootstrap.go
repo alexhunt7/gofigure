@@ -247,3 +247,10 @@ func Exit(clients map[string]*Client) error {
 		return err
 	})
 }
+
+func DeferredExit(clients map[string]*Client) {
+	err := Exit(clients)
+	if err != nil {
+		log.Fatalf("failed to shutdown gofigure minions: %v", err)
+	}
+}
