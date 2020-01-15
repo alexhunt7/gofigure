@@ -243,7 +243,7 @@ func Exit(clients map[string]*Client) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	return RunAll(ctx, clients, func(client *Client) error {
+	return RunAll(clients, func(host string, client *Client) error {
 		_, err := client.Exit(ctx, &pb.Empty{}, grpc_retry.WithMax(5))
 		return err
 	})
