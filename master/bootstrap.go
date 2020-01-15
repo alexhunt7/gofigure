@@ -134,7 +134,7 @@ func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfi
 		return gofigureClient, fmt.Errorf("failed to execute %s on remote host %s: %v", remoteExec, host, err)
 	}
 
-	grpcConnectString := fmt.Sprintf("%s:%d", host, minionConfig.Port)
+	grpcConnectString := fmt.Sprintf("%s:%d", minionConfig.Bind, minionConfig.Port)
 
 	conn, err := ConnectGRPC(grpcConnectString, masterCreds.CAFile, masterCreds.CertFile, masterCreds.KeyFile)
 	if err != nil {
