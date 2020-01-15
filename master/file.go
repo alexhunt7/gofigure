@@ -2,6 +2,7 @@ package master
 
 import (
 	"context"
+	"io/ioutil"
 	"time"
 
 	pb "github.com/alexhunt7/gofigure/proto"
@@ -16,6 +17,28 @@ func Stat(client *Client, path string, timeoutSecs int) (*pb.StatResult, error) 
 	}
 
 	return client.Stat(ctx, request)
+}
+
+func CopyFile(client *Client, src, dst, owner, group, mode string, timeoutSecs int) (*pb.FileResult, error) {
+	content, err := ioutil.ReadFile(src)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecs)*time.Second)
+	defer cancel()
+
+	request := &pb.FileRequest{
+		Properties: &pb.FileProperties{
+			Path:  dst,
+			Owner: owner,
+			Group: group,
+			Mode:  mode,
+		},
+		Content: content,
+	}
+
+	return client.File(ctx, request)
 }
 
 func File(client *Client, path, owner, group, mode string, content []byte, timeoutSecs int) (*pb.FileResult, error) {
