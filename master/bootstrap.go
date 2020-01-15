@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	Debug = false
+	Debug = true
 )
 
 type Creds struct {
@@ -110,9 +110,10 @@ func Bootstrap(host, sshConfigPath, executable string, minionConfig *MinionConfi
 	}
 
 	remoteExec := fmt.Sprintf("./%s", path.Base(executable))
+	// TODO allow arg for sudo
 	args = []string{
 		host,
-		fmt.Sprintf("%s --bind %s --port %d --caFile %s --certFile %s --keyFile %s",
+		fmt.Sprintf("sudo %s --bind %s --port %d --caFile %s --certFile %s --keyFile %s",
 			remoteExec,
 			minionConfig.Bind.String(),
 			minionConfig.Port,
