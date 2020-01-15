@@ -8,8 +8,6 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -171,29 +169,6 @@ type GofigureServer interface {
 	Stat(context.Context, *FilePath) (*StatResult, error)
 	Exec(context.Context, *ExecRequest) (*ExecResult, error)
 	Exit(context.Context, *Empty) (*Empty, error)
-}
-
-// UnimplementedGofigureServer can be embedded to have forward compatible implementations.
-type UnimplementedGofigureServer struct {
-}
-
-func (*UnimplementedGofigureServer) Directory(ctx context.Context, req *FileRequest) (*DirectoryResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Directory not implemented")
-}
-func (*UnimplementedGofigureServer) File(ctx context.Context, req *FileRequest) (*FileResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method File not implemented")
-}
-func (*UnimplementedGofigureServer) Delete(ctx context.Context, req *DeleteRequest) (*DeleteResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
-}
-func (*UnimplementedGofigureServer) Stat(ctx context.Context, req *FilePath) (*StatResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Stat not implemented")
-}
-func (*UnimplementedGofigureServer) Exec(ctx context.Context, req *ExecRequest) (*ExecResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Exec not implemented")
-}
-func (*UnimplementedGofigureServer) Exit(ctx context.Context, req *Empty) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Exit not implemented")
 }
 
 func RegisterGofigureServer(s *grpc.Server, srv GofigureServer) {
