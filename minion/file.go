@@ -21,11 +21,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"syscall"
 
@@ -58,8 +60,7 @@ func ownMod(path string, mode os.FileMode, uid int, gid int) error {
 	return nil
 }
 
-func parseFileProperties(req *pb.FileRequest) (string, os.FileMode, int, int, error) {
-	props := req.Properties
+func parseFileProperties(props *pb.FileProperties) (string, os.FileMode, int, int, error) {
 	path := props.Path
 	var mode os.FileMode
 	uid := 0
@@ -164,42 +165,14 @@ func (s *Minion) Stat(ctx context.Context, req *pb.FilePath) (*pb.StatResult, er
 
 // File creates a file with the specified mode, uid, gid, and contents.
 func (s *Minion) File(ctx context.Context, req *pb.FileRequest) (*pb.FileResult, error) {
-	path, mode, uid, gid, err := parseFileProperties(req)
+	path, mode, uid, gid, err := parseFileProperties(req.Properties)
 	if err != nil {
 		return nil, err
 	}
 
-	needsWrite := false
-	// Open the file
-	f, err := os.Open(path)
+	needsWrite, err := fileNeedsWrite(path, req.Content)
 	if err != nil {
-		if os.IsNotExist(err) {
-			needsWrite = true
-		} else {
-			return nil, err
-		}
-	} else {
-		defer f.Close()
-
-		// Compare existing file content
-		hasher := sha256.New()
-		if _, err := io.Copy(hasher, f); err != nil {
-			return nil, err
-		}
-		existingSum := hasher.Sum(nil)
-
-		hasher.Reset()
-		// TODO handle streaming?
-		// TODO hash on the controller side?
-		_, err = hasher.Write(req.Content)
-		if err != nil {
-			return nil, err
-		}
-		contentSum := hasher.Sum(nil)
-
-		if !bytes.Equal(existingSum, contentSum) {
-			needsWrite = true
-		}
+		return nil, err
 	}
 
 	if needsWrite {
@@ -223,9 +196,110 @@ func (s *Minion) File(ctx context.Context, req *pb.FileRequest) (*pb.FileResult,
 	return &pb.FileResult{}, nil
 }
 
+func fileNeedsWrite(path string, content []byte) (bool, error) {
+	needsWrite := false
+
+	f, err := os.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			needsWrite = true
+		} else {
+			return false, err
+		}
+	} else {
+		defer f.Close()
+
+		// Compare existing file content
+		hasher := sha256.New()
+		if _, err := io.Copy(hasher, f); err != nil {
+			return false, err
+		}
+		existingSum := hasher.Sum(nil)
+
+		hasher.Reset()
+		// TODO handle streaming?
+		// TODO hash on the controller side?
+		_, err = hasher.Write(content)
+		if err != nil {
+			return false, err
+		}
+		contentSum := hasher.Sum(nil)
+
+		if !bytes.Equal(existingSum, contentSum) {
+			needsWrite = true
+		}
+	}
+
+	return needsWrite, nil
+}
+
+func (s *Minion) LineInFile(ctx context.Context, req *pb.LineInFileRequest) (*pb.LineInFileResult, error) {
+	path, mode, uid, gid, err := parseFileProperties(req.Properties)
+	if err != nil {
+		return nil, err
+	}
+
+	existingContent, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var newContent []byte
+	if req.Regex == "" {
+		if bytes.Contains(existingContent, []byte(req.Line)) {
+			// TODO shortcut out here instead? needs ownMod
+			newContent = existingContent
+		} else {
+			newContent = append(newContent, existingContent...)
+			newContent = append(newContent, []byte("\n")...)
+			newContent = append(newContent, []byte(req.Line)...)
+		}
+	} else {
+		regex, err := regexp.Compile(req.Regex)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compile regex: %v", err)
+		}
+
+		// sanity check that regex matches line
+		if !regex.MatchString(req.Line) {
+			return nil, fmt.Errorf("regular expression does not match line")
+		}
+
+		// TODO search for regex, if it's not in there, append line
+		found := regex.Find(existingContent)
+		if found != nil {
+			newContent = bytes.Replace(existingContent, found, []byte(req.Line), 1)
+		} else {
+			// TODO DRY this up
+			newContent = append(newContent, existingContent...)
+			newContent = append(newContent, []byte("\n")...)
+			newContent = append(newContent, []byte(req.Line)...)
+		}
+	}
+
+	needsWrite, err := fileNeedsWrite(path, newContent)
+	if err != nil {
+		return nil, err
+	}
+
+	if needsWrite {
+		err = safeWrite(path, newContent, mode)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = ownMod(path, mode, uid, gid)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.LineInFileResult{}, nil
+}
+
 // Directory creates a directory with the specified mode, uid, and gid.
 func (s *Minion) Directory(ctx context.Context, req *pb.FileRequest) (*pb.DirectoryResult, error) {
-	path, mode, uid, gid, err := parseFileProperties(req)
+	path, mode, uid, gid, err := parseFileProperties(req.Properties)
 	if err != nil {
 		return nil, err
 	}

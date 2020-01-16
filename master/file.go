@@ -20,6 +20,7 @@ func Stat(client *Client, path string, timeoutSecs int) (*pb.StatResult, error) 
 }
 
 func CopyFile(client *Client, src, dst, owner, group, mode string, timeoutSecs int) (*pb.FileResult, error) {
+	// TODO make a proper streaming message type
 	content, err := ioutil.ReadFile(src)
 	if err != nil {
 		return nil, err
@@ -56,6 +57,24 @@ func File(client *Client, path, owner, group, mode string, content []byte, timeo
 	}
 
 	return client.File(ctx, request)
+}
+
+func LineInFile(client *Client, path, owner, group, mode, regex, line string, timeoutSecs int) (*pb.LineInFileResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecs)*time.Second)
+	defer cancel()
+
+	request := &pb.LineInFileRequest{
+		Properties: &pb.FileProperties{
+			Path:  path,
+			Owner: owner,
+			Group: group,
+			Mode:  mode,
+		},
+		Regex: regex,
+		Line:  line,
+	}
+
+	return client.LineInFile(ctx, request)
 }
 
 func Directory(client *Client, path, owner, group, mode string, timeoutSecs int) (*pb.DirectoryResult, error) {

@@ -29,6 +29,7 @@ service Gofigure {
   rpc File (FileRequest) returns (FileResult) {}
   rpc Delete (DeleteRequest) returns (DeleteResult) {}
   rpc Stat (FilePath) returns (StatResult) {}
+  rpc LineInFile (LineInFileRequest) returns (LineInFileResult) {}
   rpc Exec (ExecRequest) returns (ExecResult) {}
   rpc Exit (Empty) returns (Empty) {}
   //rpc Symlink (FileRequest) returns (SymlinkResult) {}

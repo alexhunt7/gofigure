@@ -68,3 +68,12 @@ message FileProperties {
 message DirectoryResult {}
 message FileResult {}
 message DeleteResult {}
+
+message LineInFileRequest {
+  FileProperties properties = 1;
+  string line = 2;
+  string regex = 3;
+  //string before = 4;
+  //string after = 5;
+}
+message LineInFileResult {}

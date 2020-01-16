@@ -161,7 +161,7 @@ func TestParseFileProperties(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		path, mode, uid, gid, err := parseFileProperties(tt.fileRequest)
+		path, mode, uid, gid, err := parseFileProperties(tt.fileRequest.Properties)
 		if tt.shouldErr {
 			if err == nil {
 				t.Errorf("TestParseFileProperties did not error as expected")
