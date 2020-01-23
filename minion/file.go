@@ -253,9 +253,10 @@ func (s *Minion) LineInFile(ctx context.Context, req *pb.LineInFileRequest) (*pb
 			newContent = append(newContent, existingContent...)
 			newContent = append(newContent, []byte("\n")...)
 			newContent = append(newContent, []byte(req.Line)...)
+			newContent = append(newContent, []byte("\n")...)
 		}
 	} else {
-		regex, err := regexp.Compile(req.Regex)
+		regex, err := regexp.Compile(fmt.Sprintf("(?m).*%s.*", req.Regex))
 		if err != nil {
 			return nil, fmt.Errorf("failed to compile regex: %v", err)
 		}
@@ -265,7 +266,6 @@ func (s *Minion) LineInFile(ctx context.Context, req *pb.LineInFileRequest) (*pb
 			return nil, fmt.Errorf("regular expression does not match line")
 		}
 
-		// TODO search for regex, if it's not in there, append line
 		found := regex.Find(existingContent)
 		if found != nil {
 			newContent = bytes.Replace(existingContent, found, []byte(req.Line), 1)
@@ -274,6 +274,7 @@ func (s *Minion) LineInFile(ctx context.Context, req *pb.LineInFileRequest) (*pb
 			newContent = append(newContent, existingContent...)
 			newContent = append(newContent, []byte("\n")...)
 			newContent = append(newContent, []byte(req.Line)...)
+			newContent = append(newContent, []byte("\n")...)
 		}
 	}
 
