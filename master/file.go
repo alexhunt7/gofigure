@@ -1,8 +1,10 @@
 package master
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
+	"text/template"
 	"time"
 
 	pb "github.com/alexhunt7/gofigure/proto"
@@ -54,6 +56,34 @@ func File(client *Client, path, owner, group, mode string, content []byte, timeo
 			Mode:  mode,
 		},
 		Content: content,
+	}
+
+	return client.File(ctx, request)
+}
+
+func TemplateFile(client *Client, path, owner, group, mode, templatePath string, args interface{}, timeoutSecs int) (*pb.FileResult, error) {
+	templ, err := template.ParseFiles(templatePath)
+	if err != nil {
+		return nil, err
+	}
+	//templName := path.Base(templatePath)
+	var content bytes.Buffer
+	err = templ.Execute(&content, args)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecs)*time.Second)
+	defer cancel()
+
+	request := &pb.FileRequest{
+		Properties: &pb.FileProperties{
+			Path:  path,
+			Owner: owner,
+			Group: group,
+			Mode:  mode,
+		},
+		Content: content.Bytes(),
 	}
 
 	return client.File(ctx, request)
